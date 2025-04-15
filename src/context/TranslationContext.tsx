@@ -26,7 +26,6 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
   const [service] = useState(() => new TranslationService(config));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [version, setVersion] = useState(0); // Version state to force re-render
 
   useEffect(() => {
     const initializeTranslations = async () => {
@@ -46,9 +45,7 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
     initializeTranslations();
 
     // Subscribe to translation updates
-    service.onUpdate(() => {
-      setVersion((v) => v + 1); // Increment version to trigger re-render
-    });
+    service.onUpdate(() => {});
   }, [service]);
 
   const [translations, setTranslations] = useState<Record<string, string>>({});
