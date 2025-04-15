@@ -12,9 +12,14 @@ export interface TranslationMap {
 }
 
 export interface TranslationRequest {
-  texts: { [hashkey: string]: string };
-  from: string;
-  to: string;
+  texts: Array<{
+    hashkey: string;
+    text: string;
+    type?: string;
+  }>;
+  sourceLocale: string;
+  targetLocale: string;
+  apiKey: string;
 }
 
 export interface TranslationResponse {
@@ -30,7 +35,7 @@ export interface StorageAdapter {
 }
 
 export interface TranslationContextType {
-  translate: (text: string) => string;
+  translate: (text: string, type?: string) => string;
   loading: boolean;
   error: Error | null;
 }

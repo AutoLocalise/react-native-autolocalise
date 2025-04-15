@@ -10,10 +10,11 @@ export class TranslationService {
   private config: TranslationConfig;
   private cache: TranslationMap = {};
   private storage = getStorageAdapter();
-  private pendingTranslations: Set<string> = new Set();
+  private pendingTranslations: Map<string, string | undefined> = new Map();
   private translatedTexts: Set<string> = new Set();
   private batchTimeout: NodeJS.Timeout | null = null;
   private cacheKey = "";
+  public isInitialized = false;
 
   public isTranslationPending(text: string): boolean {
     return this.pendingTranslations.has(text);
@@ -41,6 +42,13 @@ export class TranslationService {
     return hash.toString();
   }
 
+  private replaceParams(text: string, params: Record<string, string>): string {
+    return Object.entries(params).reduce(
+      (acc, [key, value]) => acc.replace(`{${key}}`, value),
+      text
+    );
+  }
+
   private debounceTime = 1000; // 1 second debounce
 
   public getCachedTranslation(text: string): string | null {
@@ -49,61 +57,8 @@ export class TranslationService {
     return this.cache[this.config.targetLocale]?.[hashkey] || null;
   }
 
-  private async fetchTranslations(texts: string[]): Promise<void> {
-    const request: TranslationRequest = {
-      texts: texts.reduce((acc, text) => {
-        const hashkey = this.generateHash(text);
-        acc[hashkey] = text;
-        return acc;
-      }, {} as { [key: string]: string }),
-      from: this.config.sourceLocale,
-      to: this.config.targetLocale,
-    };
-    console.log("fetchTranslations Request:", request);
-
-    try {
-      // const response = await fetch("https://civnjmlycaujxgcjzzyh.supabase.co/functions/v1/translate", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${this.config.apiKey}`,
-      //   },
-      //   body: JSON.stringify(request),
-      // });
-
-      // const data: TranslationResponse = await response.json();
-      const data: TranslationResponse = {
-        translations: {
-          "-506736440": "感受实时翻译",
-        },
-      };
-
-      // Update cache with new translations
-      this.cache[this.config.targetLocale] = {
-        ...this.cache[this.config.targetLocale],
-        ...data.translations,
-      };
-
-      // Notify listeners of new translations
-      if (this.onTranslationsUpdated) {
-        this.onTranslationsUpdated(this.cache[this.config.targetLocale] || {});
-      }
-
-      // Save to persistent storage
-      await this.storage.setItem(
-        this.cacheKey,
-        JSON.stringify({
-          timestamp: Date.now(),
-          data: this.cache[this.config.targetLocale],
-        })
-      );
-      const translationsStorage = await this.storage.getItem(this.cacheKey);
-      console.log("Translations storage set:", translationsStorage);
-    } catch (error) {
-      console.error("Translation fetch error:", error);
-      throw error;
-    }
-  }
+  // We've inlined the fetchTranslations functionality directly in scheduleBatchTranslation
+  // to simplify the process and avoid organizing translations by type
 
   private scheduleBatchTranslation(): void {
     if (this.batchTimeout) {
@@ -111,16 +66,84 @@ export class TranslationService {
     }
 
     this.batchTimeout = setTimeout(async () => {
-      const textsToTranslate = Array.from(this.pendingTranslations);
+      // Collect all texts and their types for batch processing
+      const allTexts: string[] = [];
+      const textTypes = new Map<string, string | undefined>();
+
+      // Gather all pending translations
+      this.pendingTranslations.forEach((type, text) => {
+        allTexts.push(text);
+        textTypes.set(text, type);
+      });
+
       this.pendingTranslations.clear();
 
-      if (textsToTranslate.length > 0) {
-        await this.fetchTranslations(textsToTranslate);
+      // Process all texts in a single batch, preserving type information in the request
+      if (allTexts.length > 0) {
+        const request: TranslationRequest = {
+          texts: allTexts.map((text) => ({
+            hashkey: this.generateHash(text),
+            text,
+            type: textTypes.get(text),
+          })),
+          sourceLocale: this.config.sourceLocale,
+          targetLocale: this.config.targetLocale,
+          apiKey: this.config.apiKey,
+        };
+        console.log("fetchTranslations Request:", request);
+
+        try {
+          const response = await fetch(
+            "https://civnjmlycaujxgcjzzyh.supabase.co/functions/v1/translate-s1",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(request),
+            }
+          );
+
+          const data: TranslationResponse = await response.json();
+          console.log("fetchTranslations Response:", data);
+
+          // Update cache with new translations
+          this.cache[this.config.targetLocale] = {
+            ...this.cache[this.config.targetLocale],
+            ...data,
+          };
+          console.log(
+            "Translations updated:",
+            this.cache[this.config.targetLocale]
+          );
+
+          // Notify listeners of new translations
+          if (this.onTranslationsUpdated) {
+            this.onTranslationsUpdated(
+              this.cache[this.config.targetLocale] || {}
+            );
+          }
+
+          // Save to persistent storage
+          await this.storage.setItem(
+            this.cacheKey,
+            JSON.stringify({
+              timestamp: Date.now(),
+              data: this.cache[this.config.targetLocale],
+            })
+          );
+          const translationsStorage = await this.storage.getItem(this.cacheKey);
+          console.log("Translations storage set:", translationsStorage);
+        } catch (error) {
+          console.error("Translation fetch error:", error);
+          throw error;
+        }
       }
     }, 100); // Batch translations every 100ms
   }
 
   public async init(): Promise<void> {
+    if (this.isInitialized) return;
     try {
       // Try to load from storage first
       const cachedData = await this.storage.getItem(this.cacheKey);
@@ -137,7 +160,7 @@ export class TranslationService {
 
       // If no valid cache, fetch from API
       const response = await fetch(
-        "https://civnjmlycaujxgcjzzyh.supabase.co/functions/v1/translations-v1",
+        "https://civnjmlycaujxgcjzzyh.supabase.co/functions/v1/translations-s1",
         {
           method: "POST",
           headers: {
@@ -166,25 +189,45 @@ export class TranslationService {
           data,
         })
       );
+      this.isInitialized = true;
     } catch (error) {
       console.error("Translation initialization error:", error);
       throw error;
     }
   }
 
-  public async translate(text: string): Promise<string> {
+  public async translate(text: string, type?: string): Promise<string> {
     if (!text) return text;
 
+    // Extract parameters from text if any
+    const paramRegex = /\{(\w+)\}/g;
+    const params: Record<string, string> = {};
+    let match;
+    while ((match = paramRegex.exec(text))) {
+      params[match[1]] = "";
+    }
+
+    // Clean text for translation (remove params) ?? TODO what's this
+    const cleanText =
+      Object.keys(params).length > 0 ? text.replace(/\{\w+\}/g, "{}") : text;
+
+    // Ensure initialization
+    if (!this.isInitialized) {
+      await this.init();
+    }
+
     // Check cache first
-    const cachedTranslation = this.getCachedTranslation(text);
+    const cachedTranslation = this.getCachedTranslation(cleanText);
     if (cachedTranslation) {
-      return cachedTranslation;
+      return Object.keys(params).length > 0
+        ? this.replaceParams(cachedTranslation, params)
+        : cachedTranslation;
     }
 
     // Only request translation if we haven't tried before
-    if (!this.translatedTexts.has(text)) {
-      this.translatedTexts.add(text);
-      this.pendingTranslations.add(text);
+    if (!this.translatedTexts.has(cleanText)) {
+      this.translatedTexts.add(cleanText);
+      this.pendingTranslations.set(cleanText, type);
       this.scheduleBatchTranslation();
     }
 

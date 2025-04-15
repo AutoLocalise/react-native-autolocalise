@@ -9,7 +9,7 @@ import { TranslationConfig, TranslationContextType } from "../types";
 import { TranslationService } from "../services/translation";
 
 const TranslationContext = createContext<TranslationContextType>({
-  translate: (text: string) => text,
+  translate: (text: string, type?: string) => text,
   loading: true,
   error: null,
 });
@@ -51,25 +51,39 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
     });
   }, [service]);
 
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+
   const translate = useMemo(
     () =>
-      (text: string): string => {
+      (text: string, type?: string): string => {
         if (!text) return text;
-        console.log("translate");
-        // Use service's cache directly
+        if (loading) return text;
+
+        // Return cached translation if available
         const cachedTranslation = service.getCachedTranslation(text);
         if (cachedTranslation) return cachedTranslation;
 
-        // If not in cache and not already being translated, trigger translation
+        // Return from local state if available
+        if (translations[text]) return translations[text];
+
+        // Start async translation if not already pending
         if (!service.isTranslationPending(text)) {
-          service.translate(text).then(() => {
-            // Translation will be updated through the onUpdate subscription
-          });
+          service
+            .translate(text, type)
+            .then((translated) => {
+              if (translated) {
+                setTranslations((prev) => ({ ...prev, [text]: translated }));
+              }
+            })
+            .catch((err) => {
+              console.error("Translation error:", err);
+            });
         }
 
-        return text; // Return original text while translation is pending
+        // Return original text while translation is in progress
+        return text;
       },
-    [service, version] // Include version in dependencies to trigger re-render when translations update
+    [service, loading, translations]
   );
 
   return (
