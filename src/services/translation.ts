@@ -42,18 +42,11 @@ export class TranslationService {
     return hash.toString();
   }
 
-  private replaceParams(text: string, params: Record<string, string>): string {
-    return Object.entries(params).reduce(
-      (acc, [key, value]) => acc.replace(`{${key}}`, value),
-      text
-    );
-  }
-
   private debounceTime = 1000; // 1 second debounce
 
   public getCachedTranslation(text: string): string | null {
     const hashkey = this.generateHash(text);
-    console.log("getCachedTranslation hashkey:", hashkey, text);
+    // console.log("getCachedTranslation hashkey:", hashkey, text);
     return this.cache[this.config.targetLocale]?.[hashkey] || null;
   }
 
@@ -67,25 +60,18 @@ export class TranslationService {
 
     this.batchTimeout = setTimeout(async () => {
       // Collect all texts and their types for batch processing
-      const allTexts: string[] = [];
-      const textTypes = new Map<string, string | undefined>();
+      const allTexts: { hashkey: string; text: string; type?: string }[] = [];
 
       // Gather all pending translations
       this.pendingTranslations.forEach((type, text) => {
-        allTexts.push(text);
-        textTypes.set(text, type);
+        allTexts.push({ hashkey: this.generateHash(text), text, type });
       });
-
       this.pendingTranslations.clear();
-
+      console.log("this.pendingTranslations", allTexts);
       // Process all texts in a single batch, preserving type information in the request
       if (allTexts.length > 0) {
         const request: TranslationRequest = {
-          texts: allTexts.map((text) => ({
-            hashkey: this.generateHash(text),
-            text,
-            type: textTypes.get(text),
-          })),
+          texts: allTexts,
           sourceLocale: this.config.sourceLocale,
           targetLocale: this.config.targetLocale,
           apiKey: this.config.apiKey,
@@ -199,37 +185,24 @@ export class TranslationService {
   public async translate(text: string, type?: string): Promise<string> {
     if (!text) return text;
 
-    // Extract parameters from text if any
-    const paramRegex = /\{(\w+)\}/g;
-    const params: Record<string, string> = {};
-    let match;
-    while ((match = paramRegex.exec(text))) {
-      params[match[1]] = "";
-    }
-
-    // Clean text for translation (remove params) ?? TODO what's this
-    const cleanText =
-      Object.keys(params).length > 0 ? text.replace(/\{\w+\}/g, "{}") : text;
-
     // Ensure initialization
     if (!this.isInitialized) {
       await this.init();
     }
 
     // Check cache first
-    const cachedTranslation = this.getCachedTranslation(cleanText);
+    const cachedTranslation = this.getCachedTranslation(text);
     if (cachedTranslation) {
-      return Object.keys(params).length > 0
-        ? this.replaceParams(cachedTranslation, params)
-        : cachedTranslation;
+      return cachedTranslation;
     }
 
     // Only request translation if we haven't tried before
-    if (!this.translatedTexts.has(cleanText)) {
-      this.translatedTexts.add(cleanText);
-      this.pendingTranslations.set(cleanText, type);
-      this.scheduleBatchTranslation();
-    }
+    // TODO the logic here looks weird, translatedTexts got initial value from storage?
+    // if (!this.translatedTexts.has(text)) {
+    //   this.translatedTexts.add(text);
+    this.pendingTranslations.set(text, type);
+    this.scheduleBatchTranslation();
+    // }
 
     // Return original text while translation is pending
     return text;
