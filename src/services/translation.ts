@@ -96,7 +96,7 @@ export class TranslationService {
           // Update cache with new translations
           this.cache[this.config.targetLocale] = {
             ...this.cache[this.config.targetLocale],
-            ...data.,
+            ...data,
           };
           console.log(
             "Translations updated:",
