@@ -23,9 +23,7 @@ export interface TranslationRequest {
 }
 
 export interface TranslationResponse {
-  translations: {
-    [hashkey: string]: string;
-  };
+  [hashkey: string]: string;
 }
 
 export interface StorageAdapter {

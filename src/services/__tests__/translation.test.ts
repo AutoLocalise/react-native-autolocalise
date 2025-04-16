@@ -15,17 +15,18 @@ global.fetch = jest.fn();
 
 describe("TranslationService", () => {
   let translationService: TranslationService;
+  let mockStorage: any;
   const mockConfig = {
     apiKey: "test-api-key",
-    locale: "es",
-    fallbackLocale: "en",
-    projectId: "test-project",
+    targetLocale: "es",
+    sourceLocale: "en",
     cacheTTL: 24,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     translationService = new TranslationService(mockConfig);
+    mockStorage = getStorageAdapter();
   });
 
   describe("init", () => {
@@ -44,10 +45,10 @@ describe("TranslationService", () => {
 
       await translationService.init();
 
-      expect(mockStorage.getItem).toHaveBeenCalledWith("translations_es");
+      expect(mockStorage.getItem).toHaveBeenCalledWith("autolocalise_es");
       expect(global.fetch).not.toHaveBeenCalled();
 
-      const result = translationService.translate(testText);
+      const result = translationService.translate(testText, "button");
       expect(result).toBe("Hola");
     });
 
@@ -70,12 +71,21 @@ describe("TranslationService", () => {
       await translationService.init();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.example.com/translations?locale=es",
-        expect.any(Object)
+        "https://civnjmlycaujxgcjzzyh.supabase.co/functions/v1/translations-s1",
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            apiKey: mockConfig.apiKey,
+            targetLocale: mockConfig.targetLocale,
+          }),
+        })
       );
 
       expect(mockStorage.setItem).toHaveBeenCalledWith(
-        "translations_es",
+        "autolocalise_es",
         expect.stringContaining(JSON.stringify(newTranslations))
       );
     });
@@ -98,12 +108,12 @@ describe("TranslationService", () => {
       );
 
       await translationService.init();
-      const result = translationService.translate(testText);
+      const result = translationService.translate(testText, "button");
 
       expect(result).toBe(mockTranslation);
     });
 
-    it("should trigger API call for missing translations", async () => {
+    it("should trigger API call for missing translations with type parameter", async () => {
       const testText = "Hello";
       const testHash = translationService["generateHash"](testText);
 
@@ -117,17 +127,25 @@ describe("TranslationService", () => {
           }),
       });
 
-      const result = translationService.translate(testText);
+      const result = translationService.translate(testText, "button");
       expect(result).toBe(testText); // Initially returns original text
 
       jest.runAllTimers(); // Trigger the batch translation
       await Promise.resolve(); // Wait for the async operation
 
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.example.com/translate",
+        "https://civnjmlycaujxgcjzzyh.supabase.co/functions/v1/translate-s1",
         expect.objectContaining({
           method: "POST",
-          body: expect.stringContaining(testText),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            texts: [{ hashkey: testHash, text: testText, type: "button" }],
+            sourceLocale: mockConfig.sourceLocale,
+            targetLocale: mockConfig.targetLocale,
+            apiKey: mockConfig.apiKey,
+          }),
         })
       );
 
