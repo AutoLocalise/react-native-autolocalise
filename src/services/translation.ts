@@ -11,7 +11,6 @@ export class TranslationService {
   private cache: TranslationMap = {};
   private storage = getStorageAdapter();
   private pendingTranslations: Map<string, string | undefined> = new Map();
-  private translatedTexts: Set<string> = new Set();
   private batchTimeout: NodeJS.Timeout | null = null;
   private cacheKey = "";
   public isInitialized = false;
@@ -140,6 +139,7 @@ export class TranslationService {
         if (age < this.config.cacheTTL!) {
           this.cache[this.config.targetLocale] = data;
           console.log("Loaded translations from cache:", data);
+          this.isInitialized = true;
           return;
         }
       }
@@ -182,13 +182,15 @@ export class TranslationService {
     }
   }
 
-  public async translate(text: string, type?: string): Promise<string> {
-    if (!text) return text;
+  public translate(text: string, type?: string): string {
+    // console.log("translate text:isInitialized", this.isInitialized);
+    if (!text || !this.isInitialized) return text;
 
-    // Ensure initialization
-    if (!this.isInitialized) {
-      await this.init();
-    }
+    // // Ensure initialization
+    // if (!this.isInitialized) {
+    //   // await this.init();
+    //   return text;
+    // }
 
     // Check cache first
     const cachedTranslation = this.getCachedTranslation(text);

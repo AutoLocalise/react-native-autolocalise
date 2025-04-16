@@ -26,6 +26,7 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
   const [service] = useState(() => new TranslationService(config));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     const initializeTranslations = async () => {
@@ -45,42 +46,34 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
     initializeTranslations();
 
     // Subscribe to translation updates
-    service.onUpdate(() => {});
+    service.onUpdate(() => {
+      // Increment version to trigger re-render when translations update
+      setVersion((v) => v + 1);
+    });
   }, [service]);
 
-  const [translations, setTranslations] = useState<Record<string, string>>({});
+  // const [translations, setTranslations] = useState<Record<string, string>>({});
 
+  // Remove the translations state
   const translate = useMemo(
     () =>
       (text: string, type?: string): string => {
-        if (!text) return text;
-        if (loading) return text;
+        if (!text || loading) return text;
+        console.log("translate", text, type);
 
         // Return cached translation if available
         const cachedTranslation = service.getCachedTranslation(text);
         if (cachedTranslation) return cachedTranslation;
 
-        // Return from local state if available
-        if (translations[text]) return translations[text];
-
         // Start async translation if not already pending
         if (!service.isTranslationPending(text)) {
-          service
-            .translate(text, type)
-            .then((translated) => {
-              if (translated) {
-                setTranslations((prev) => ({ ...prev, [text]: translated }));
-              }
-            })
-            .catch((err) => {
-              console.error("Translation error:", err);
-            });
+          return service.translate(text, type);
         }
 
-        // Return original text while translation is in progress
+        // Return original text while translation is pending
         return text;
       },
-    [service, loading, translations]
+    [service, loading, version] // Add version to dependencies to trigger re-render
   );
 
   return (
