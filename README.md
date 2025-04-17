@@ -18,10 +18,28 @@ You don't need to prepare any translation files, just provide your API key and t
 
 ## Installation
 
+### React Web
+
 ```bash
 npm install react-autolocalise
 # or
 yarn add react-autolocalise
+```
+
+### React Native
+
+```bash
+npm install react-autolocalise @react-native-async-storage/async-storage
+# or
+yarn add react-autolocalise @react-native-async-storage/async-storage
+```
+
+### Expo
+
+```bash
+npm install react-autolocalise expo-secure-store
+# or
+yarn add react-autolocalise expo-secure-store
 ```
 
 ## Usage
