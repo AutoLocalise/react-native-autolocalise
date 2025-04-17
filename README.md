@@ -1,6 +1,10 @@
 # React AutoLocalise
 
-A lightweight, efficient auto-translation SDK for React, React Native, and Expo applications. This SDK provides seamless integration for automatic content translation with built-in caching support.
+This is SDK for [AutoLocalise](<[AutoLocalise](https://www.autolocalise.com)>).
+
+A lightweight, efficient auto-translation SDK for React, React Native, and Expo applications. This SDK provides seamless integration for automatic content translation and support offline mode.
+
+You don't need to prepare any translation files, just provide your API key and the SDK will handle the rest.
 
 ## Features
 
@@ -23,16 +27,17 @@ yarn add react-autolocalise
 
 ### 1. Initialize the SDK
 
+<!-- TODO the locale format -->
+
 ```typescript
 import { TranslationProvider } from "react-autolocalise";
 
 const App = () => {
   const config = {
     apiKey: "your-api-key",
-    locale: "fr",
-    fallbackLocale: "en",
-    projectId: "your-project-id",
-    cacheTTL: 24, // Cache validity in hours (optional, defaults to 24)
+    sourceLocale: "fr",
+    targetLocale: "en",
+    // cacheTTL: 24, // Cache validity in hours (optional, defaults to 24)
   };
 
   return (
@@ -45,36 +50,49 @@ const App = () => {
 
 ### 2. Use the Translation Hook
 
+Basic usage:
+
 ```typescript
 import { useAutoTranslate } from "react-autolocalise";
 
 const MyComponent = () => {
   const { t, loading, error } = useAutoTranslate();
 
-  if (loading) return <div>Loading translations...</div>;
-  if (error) return <div>Error loading translations</div>;
-
   return (
     <div>
-      <h1>{t("Welcome to our app!")}</h1>
+      <h1>{t("Welcome to our app!", "static")}</h1>
       <p>{t("This text will be automatically translated")}</p>
     </div>
   );
 };
 ```
 
-### 3. Non-React Usage
+Use with params:
 
 ```typescript
-import autoTranslate from "react-autolocalise";
+import { useAutoTranslate } from "react-autolocalise";
 
-autoTranslate.init({
-  apiKey: "your-api-key",
-  locale: "fr",
-  fallbackLocale: "en",
-  projectId: "your-project-id",
-});
+const MyComponent = () => {
+  const { t } = useAutoTranslate();
+  const name = "John";
+
+  return (
+    <div>
+      <p>
+        {t("Welcome, {{1}}!, Nice to meet you. {{2}}.")
+          .replace("{{1}}", name)
+          .replace("{{2}}", t("Have a great day!"))}
+      </p>
+    </div>
+  );
+};
 ```
+
+## How to get the locale
+
+### React
+
+### React Native / Expo
 
 ## API Reference
 
@@ -86,39 +104,35 @@ autoTranslate.init({
 
 ### TranslationConfig
 
-| Property       | Type   | Required | Description                                       |
-| -------------- | ------ | -------- | ------------------------------------------------- |
-| apiKey         | string | Yes      | Your API key for the translation service          |
-| locale         | string | Yes      | Target locale for translations                    |
-| fallbackLocale | string | Yes      | Fallback locale when translations are unavailable |
-| projectId      | string | Yes      | Your project identifier                           |
-| cacheTTL       | number | No       | Cache validity period in hours (default: 24)      |
+| Property     | Type   | Required | Description                                                          |
+| ------------ | ------ | -------- | -------------------------------------------------------------------- |
+| apiKey       | string | Yes      | Your API key for the translation service                             |
+| sourceLocale | string | Yes      | (Optional), Target locale for translations, will auto detect if omit |
+| sourceLocale | string | Yes      | Fallback locale when translations are unavailable                    |
+| cacheTTL     | number | No       | Cache validity period in hours (default: 24)                         |
 
 ### useAutoTranslate Hook
 
 Returns an object with:
 
 - `t`: Translation function
-- `loading`: Boolean indicating if translations are loading
+- `loading`: Boolean indicating initialization of translations
 - `error`: Error object if translation loading failed
 
-## Cache Structure
+### Static persist
 
-The SDK uses a two-level caching strategy:
+When you pass the 'static' parameter to the translation function, the translation will be persisted so that you can review and edit in the dashboard, default is non-static, nothing will be persisted.
 
-1. In-memory cache for fast access
-2. Persistent storage (localStorage/AsyncStorage) for offline support
-
-Cache format:
-
-```json
-{
-  "fr": {
-    "hashedKey1": "Bonjour",
-    "hashedKey2": "Au revoir"
-  }
+```typescript
+import { useAutoTranslate } from "react-autolocalise";
+const MyComponent = () => {
+  const { t } = useAutoTranslate();
+  return (
+    <div>
+      <h1>{t("Welcome to our app!", "static")}</h1>
+    </div>
+  )
 }
-```
 
 ## Contributing
 
@@ -127,3 +141,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT
+```

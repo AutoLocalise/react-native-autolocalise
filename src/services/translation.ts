@@ -138,7 +138,7 @@ export class TranslationService {
 
         if (age < this.config.cacheTTL!) {
           this.cache[this.config.targetLocale] = data;
-          console.log("Loaded translations from cache:", data);
+          // console.log("Loaded translations from cache:", data);
           this.isInitialized = true;
           return;
         }
@@ -175,6 +175,7 @@ export class TranslationService {
           data,
         })
       );
+      console.log("Translations storage set:", data);
       this.isInitialized = true;
     } catch (error) {
       console.error("Translation initialization error:", error);
