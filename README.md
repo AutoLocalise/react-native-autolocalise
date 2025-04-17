@@ -10,10 +10,11 @@ You don't need to prepare any translation files, just provide your API key and t
 
 - 🌐 Cross-platform support (React Web, React Native, Expo)
 - 🚀 Automatic string detection and translation
-- 💾 Built-in caching with localStorage/AsyncStorage
-- 🔄 Efficient batch translation processing
+- 🎯 Dynamic parameter interpolation
+- 🔍 Static translation tracking
+- 🔌 Offline mode support
+- ⚙️ Configurable cache TTL
 - ⚡️ Tree-shakeable and side-effect free
-- 📦 TypeScript support
 
 ## Installation
 
@@ -26,8 +27,6 @@ yarn add react-autolocalise
 ## Usage
 
 ### 1. Initialize the SDK
-
-<!-- TODO the locale format -->
 
 ```typescript
 import { TranslationProvider } from "react-autolocalise";
@@ -88,11 +87,71 @@ const MyComponent = () => {
 };
 ```
 
+## Locale Format
+
+The locale format follows the ISO 639-1 language code standard, optionally combined with an ISO 3166-1 country code:
+
+- Language code only: 'en', 'fr', 'zh', 'ja', etc.
+- Language-Region: 'en-US', 'fr-FR', 'zh-CN', 'pt-BR', etc.
+
 ## How to get the locale
 
 ### React
 
-### React Native / Expo
+In React web applications, you can get the user's preferred locale from the browser:
+
+```typescript
+// Get the primary locale
+const browserLocale = navigator.language; // e.g., 'en-US'
+
+// Get all preferred locales
+const preferredLocales = navigator.languages; // e.g., ['en-US', 'en']
+
+// Extract just the language code if needed
+const languageCode = browserLocale.split("-")[0]; // e.g., 'en'
+```
+
+### React Native
+
+In React Native, you can get the device locale using the Localization API:
+
+```typescript
+import * as Localization from "react-native-localization";
+// or
+import { NativeModules, Platform } from "react-native";
+
+// Using react-native-localization
+const deviceLocale = Localization.locale; // e.g., 'en-US'
+
+// Alternative method using native modules
+const deviceLanguage =
+  Platform.OS === "ios"
+    ? NativeModules.SettingsManager.settings.AppleLocale ||
+      NativeModules.SettingsManager.settings.AppleLanguages[0]
+    : NativeModules.I18nManager.localeIdentifier;
+```
+
+### Expo
+
+In Expo, you can use the Localization API from expo-localization:
+
+```typescript
+import * as Localization from "expo-localization";
+
+// Get the device locale
+const locale = Localization.locale; // e.g., 'en-US'
+
+// Get just the language code
+const languageCode = locale.split("-")[0]; // e.g., 'en'
+
+// Get the user's preferred locales
+const preferredLocales = Localization.locales; // e.g., ['en-US', 'en']
+
+// Check if the device uses RTL layout
+const isRTL = Localization.isRTL;
+```
+
+Note: When running Expo in a web browser, it will use the browser's locale settings (navigator.language) automatically.
 
 ## API Reference
 
@@ -104,12 +163,12 @@ const MyComponent = () => {
 
 ### TranslationConfig
 
-| Property     | Type   | Required | Description                                                          |
-| ------------ | ------ | -------- | -------------------------------------------------------------------- |
-| apiKey       | string | Yes      | Your API key for the translation service                             |
-| sourceLocale | string | Yes      | (Optional), Target locale for translations, will auto detect if omit |
-| sourceLocale | string | Yes      | Fallback locale when translations are unavailable                    |
-| cacheTTL     | number | No       | Cache validity period in hours (default: 24)                         |
+| Property     | Type   | Required | Description                                                  |
+| ------------ | ------ | -------- | ------------------------------------------------------------ |
+| apiKey       | string | Yes      | Your API key for the translation service                     |
+| sourceLocale | string | No       | Source locale for translations (will auto-detect if omitted) |
+| targetLocale | string | Yes      | Target locale for translations                               |
+| cacheTTL     | number | No       | Cache validity period in hours (default: 24)                 |
 
 ### useAutoTranslate Hook
 
@@ -131,8 +190,9 @@ const MyComponent = () => {
     <div>
       <h1>{t("Welcome to our app!", "static")}</h1>
     </div>
-  )
-}
+  );
+};
+```
 
 ## Contributing
 
@@ -141,4 +201,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT
-```

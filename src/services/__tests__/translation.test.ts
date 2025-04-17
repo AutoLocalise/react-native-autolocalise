@@ -1,5 +1,4 @@
 import { TranslationService } from "../translation";
-import { getStorageAdapter } from "../../storage";
 
 // Create a shared mock storage object that will be returned by getStorageAdapter
 const mockStorageAdapter = {
@@ -15,6 +14,13 @@ jest.mock("../../storage", () => ({
 
 // Mock fetch
 global.fetch = jest.fn();
+
+// Mock environment variables
+const mockBaseUrl = "https://test-api-base-url.com";
+process.env = {
+  ...process.env,
+  BASE_URL: mockBaseUrl,
+};
 
 describe("TranslationService", () => {
   let translationService: TranslationService;
@@ -108,7 +114,7 @@ describe("TranslationService", () => {
 
       // Verify API was called with correct parameters
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://civnjmlycaujxgcjzzyh.supabase.co/functions/v1/translations-s1",
+        `${mockBaseUrl}/translations-s1`,
         expect.objectContaining({
           method: "POST",
           headers: {
@@ -209,7 +215,7 @@ describe("TranslationService", () => {
 
       // Verify the fetch was called with correct parameters
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://civnjmlycaujxgcjzzyh.supabase.co/functions/v1/translate-s1",
+        `${mockBaseUrl}/translate-s1`,
         expect.objectContaining({
           method: "POST",
           headers: {

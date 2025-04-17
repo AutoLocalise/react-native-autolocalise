@@ -59,7 +59,6 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
     () =>
       (text: string, type?: string): string => {
         if (!text || loading) return text;
-        console.log("translate", text, type);
 
         // Return cached translation if available
         const cachedTranslation = service.getCachedTranslation(text);
