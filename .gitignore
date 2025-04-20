@@ -30,3 +30,5 @@ coverage/
 
 # Test app (for local development only)
 test-app/
+test-nextjs-app/
+examples/
