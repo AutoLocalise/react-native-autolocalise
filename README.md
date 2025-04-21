@@ -181,12 +181,14 @@ Note: When running Expo in a web browser, it will use the browser's locale setti
 
 ### TranslationConfig
 
-| Property     | Type   | Required | Description                                                  |
-| ------------ | ------ | -------- | ------------------------------------------------------------ |
-| apiKey       | string | Yes      | Your API key for the translation service                     |
-| sourceLocale | string | No       | Source locale for translations (will auto-detect if omitted) |
-| targetLocale | string | Yes      | Target locale for translations                               |
-| cacheTTL     | number | No       | Cache validity period in hours (default: 24)                 |
+| Property     | Type   | Required | Description                                  |
+| ------------ | ------ | -------- | -------------------------------------------- |
+| apiKey       | string | Yes      | Your API key for the translation service     |
+| sourceLocale | string | Yes      | Source locale for translations               |
+| targetLocale | string | Yes      | Target locale for translations               |
+| cacheTTL     | number | No       | Cache validity period in hours (default: 24) |
+
+**Tips**: When `sourceLocale` === `targetLocale` no translation requests will be send.
 
 ### useAutoTranslate Hook
 

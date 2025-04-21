@@ -68,6 +68,11 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
       (text: string, type?: string): string => {
         if (!text || loading) return text;
 
+        // Skip translation if source and target languages are the same
+        if (config.sourceLocale === config.targetLocale) {
+          return text;
+        }
+
         // Return cached translation if available
         const cachedTranslation = service.getCachedTranslation(text);
         if (cachedTranslation) return cachedTranslation;
