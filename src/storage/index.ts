@@ -12,23 +12,6 @@ export async function getStorageAdapter(): Promise<StorageAdapter> {
     global.navigator.product === "ReactNative";
 
   if (isReactNative) {
-    // Try Expo SecureStore first
-    try {
-      const ExpoSecureStore = await import("expo-secure-store").catch(
-        () => null
-      );
-      if (ExpoSecureStore) {
-        return {
-          getItem: ExpoSecureStore.getItemAsync,
-          setItem: ExpoSecureStore.setItemAsync,
-          removeItem: ExpoSecureStore.deleteItemAsync,
-        };
-      }
-    } catch (e) {
-      // Expo SecureStore not available, try AsyncStorage
-    }
-
-    // Try React Native AsyncStorage
     try {
       const AsyncStorage = await import(
         "@react-native-async-storage/async-storage"
@@ -41,7 +24,7 @@ export async function getStorageAdapter(): Promise<StorageAdapter> {
     }
 
     throw new Error(
-      "No storage adapter available. Please install either expo-secure-store or @react-native-async-storage/async-storage"
+      "No storage adapter available. Please install @react-native-async-storage/async-storage"
     );
   }
 
