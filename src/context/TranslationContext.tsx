@@ -9,6 +9,14 @@ import { TranslationConfig, TranslationContextType } from "../types";
 import { TranslationService } from "../services/translation";
 
 const TranslationContext = createContext<TranslationContextType>({
+  /**
+   * Translates the given text to the target language
+   * @param text - The text to translate
+   * @param type - Optional parameter to specify the type of text being translated (e.g., 'title', 'description', etc.)
+   *              This is used by the translation service to provide context-aware translations
+   * @returns The translated text, or the original text if translation is not yet available
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   translate: (text: string, type?: string) => text,
   loading: true,
   error: null,
@@ -72,6 +80,7 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
         // Return original text while translation is pending
         return text;
       },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [service, loading, version] // Add version to dependencies to trigger re-render
   );
 

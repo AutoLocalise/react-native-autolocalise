@@ -4,23 +4,19 @@ interface StorageAdapter {
   removeItem: (key: string) => Promise<void>;
 }
 
-export function getStorageAdapter(): StorageAdapter {
+export async function getStorageAdapter(): Promise<StorageAdapter> {
   // Check if we're in React Native/Expo environment
   const isReactNative =
     typeof global !== "undefined" &&
-    typeof require === "function" &&
-    !!(
-      require.resolve("react-native") ||
-      require.resolve("@react-native-async-storage/async-storage")
-    );
+    typeof global.navigator?.product === "string" &&
+    global.navigator.product === "ReactNative";
 
   if (isReactNative) {
-    // Dynamic imports for React Native/Expo
-    let storage: StorageAdapter | null = null;
-
     // Try Expo SecureStore first
     try {
-      const ExpoSecureStore = require("expo-secure-store");
+      const ExpoSecureStore = await import("expo-secure-store").catch(
+        () => null
+      );
       if (ExpoSecureStore) {
         return {
           getItem: ExpoSecureStore.getItemAsync,
@@ -34,10 +30,11 @@ export function getStorageAdapter(): StorageAdapter {
 
     // Try React Native AsyncStorage
     try {
-      const AsyncStorage =
-        require("@react-native-async-storage/async-storage").default;
-      if (AsyncStorage) {
-        return AsyncStorage;
+      const AsyncStorage = await import(
+        "@react-native-async-storage/async-storage"
+      ).catch(() => null);
+      if (AsyncStorage?.default) {
+        return AsyncStorage.default;
       }
     } catch (e) {
       // AsyncStorage not available

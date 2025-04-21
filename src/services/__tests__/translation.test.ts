@@ -65,7 +65,7 @@ describe("TranslationService", () => {
       );
 
       // Verify that the cache was loaded correctly
-      const result = translationService.translate(testText, "button");
+      const result = translationService.translate(testText);
       expect(result).toBe("Hola");
     });
 
@@ -83,9 +83,9 @@ describe("TranslationService", () => {
       const newTranslations = { hash2: "Nuevo" };
 
       // Create a mock implementation that will properly update the cache
-      (global.fetch as jest.Mock).mockImplementation(async (url, options) => {
+      (global.fetch as jest.Mock).mockImplementation(async (url) => {
         // Only return newTranslations for the translations-s1 endpoint
-        if (url.includes("translations-s1")) {
+        if (url.includes("v1/translations")) {
           return {
             ok: true,
             statusText: "OK",
@@ -101,8 +101,8 @@ describe("TranslationService", () => {
 
       // Reset the mock implementation for setItem
       (mockStorageAdapter.setItem as jest.Mock).mockClear();
-      (mockStorageAdapter.setItem as jest.Mock).mockImplementation(
-        (key, value) => Promise.resolve()
+      (mockStorageAdapter.setItem as jest.Mock).mockImplementation(() =>
+        Promise.resolve()
       );
 
       // Call init which should fetch fresh translations
@@ -114,7 +114,7 @@ describe("TranslationService", () => {
 
       // Verify API was called with correct parameters
       expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/translations-s1`,
+        `${mockBaseUrl}/v1/translations`,
         expect.objectContaining({
           method: "POST",
           headers: {
@@ -215,7 +215,7 @@ describe("TranslationService", () => {
 
       // Verify the fetch was called with correct parameters
       expect(global.fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/translate-s1`,
+        `${mockBaseUrl}/v1/translate`,
         expect.objectContaining({
           method: "POST",
           headers: {

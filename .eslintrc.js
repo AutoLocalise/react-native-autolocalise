@@ -23,7 +23,7 @@ module.exports = {
   plugins: ["react", "react-hooks", "@typescript-eslint"],
   settings: {
     react: {
-      version: "detect",
+      version: "18.0.0",
     },
   },
   rules: {

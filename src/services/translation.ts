@@ -1,14 +1,16 @@
 import {
+  StorageAdapter,
   TranslationConfig,
   TranslationMap,
   TranslationRequest,
+  TranslationResponse,
 } from "../types";
 import { getStorageAdapter } from "../storage";
 
 export class TranslationService {
   private config: TranslationConfig;
   private cache: TranslationMap = {};
-  private storage = getStorageAdapter();
+  private storage: StorageAdapter | null = null;
   private pendingTranslations: Map<string, string | undefined> = new Map();
   private batchTimeout: NodeJS.Timeout | null = null;
   private cacheKey = "";
@@ -48,7 +50,9 @@ export class TranslationService {
     return this.cache[this.config.targetLocale]?.[hashkey] || null;
   }
 
-  private async baseApi(endpoint: string, requestBody: any): Promise<any> {
+  private async baseApi<
+    T extends TranslationRequest | { apiKey: string; targetLocale: string }
+  >(endpoint: string, requestBody: T): Promise<TranslationResponse> {
     const response = await fetch(`${this.baseUrl}/${endpoint}`, {
       method: "POST",
       headers: {
@@ -65,6 +69,7 @@ export class TranslationService {
   }
 
   private scheduleBatchTranslation(): void {
+    if (!this.storage) return;
     if (this.batchTimeout) {
       clearTimeout(this.batchTimeout);
     }
@@ -86,7 +91,7 @@ export class TranslationService {
         };
 
         try {
-          const data = await this.baseApi("translate-s1", request);
+          const data = await this.baseApi("v1/translate", request);
 
           this.cache[this.config.targetLocale] = {
             ...this.cache[this.config.targetLocale],
@@ -99,14 +104,15 @@ export class TranslationService {
             );
           }
 
-          await this.storage.setItem(
-            this.cacheKey,
-            JSON.stringify({
-              timestamp: Date.now(),
-              data: this.cache[this.config.targetLocale],
-            })
-          );
-          const translationsStorage = await this.storage.getItem(this.cacheKey);
+          if (this.storage) {
+            await this.storage.setItem(
+              this.cacheKey,
+              JSON.stringify({
+                timestamp: Date.now(),
+                data: this.cache[this.config.targetLocale],
+              })
+            );
+          }
         } catch (error) {
           console.error("Translation fetch error:", error);
           throw error;
@@ -118,6 +124,7 @@ export class TranslationService {
   public async init(): Promise<void> {
     if (this.isInitialized) return;
     try {
+      this.storage = await getStorageAdapter();
       const cachedData = await this.storage.getItem(this.cacheKey);
       if (cachedData) {
         const { timestamp, data } = JSON.parse(cachedData);
@@ -135,7 +142,7 @@ export class TranslationService {
         targetLocale: this.config.targetLocale,
       };
 
-      const data = await this.baseApi("translations-s1", requestBody);
+      const data = await this.baseApi("v1/translations", requestBody);
       this.cache[this.config.targetLocale] = data;
 
       await this.storage.setItem(
