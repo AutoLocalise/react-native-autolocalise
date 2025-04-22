@@ -16,7 +16,6 @@ export default {
   ],
   external: [
     "react",
-    "react-dom",
     "react-native",
     "@react-native-async-storage/async-storage",
   ],
