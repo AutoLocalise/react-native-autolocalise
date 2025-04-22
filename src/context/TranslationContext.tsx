@@ -60,9 +60,6 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
     });
   }, [service]);
 
-  // const [translations, setTranslations] = useState<Record<string, string>>({});
-
-  // Remove the translations state
   const translate = useMemo(
     () =>
       (text: string, type?: string): string => {
