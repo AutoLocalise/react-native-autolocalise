@@ -12,7 +12,7 @@ export class TranslationService {
   private cache: TranslationMap = {};
   private storage: StorageAdapter | null = null;
   private pendingTranslations: Map<string, string | undefined> = new Map();
-  private batchTimeout: NodeJS.Timeout | null = null;
+  private batchTimeout: ReturnType<typeof setTimeout> | null = null;
   private cacheKey = "";
   private baseUrl = process.env.BASE_URL;
   public isInitialized = false;
