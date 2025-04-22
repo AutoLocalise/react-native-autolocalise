@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "name": "react-autolocalise",
+  "name": "react-native-autolocalise",
   "version": "0.0.1",
   "description": "Auto-translation SDK for React, React Native and Expo applications",
   "main": "dist/index.js",
@@ -50,5 +50,12 @@
     "rollup": "^3.28.1",
     "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/your-repo-name.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/your-repo-name/issues"
   }
 }

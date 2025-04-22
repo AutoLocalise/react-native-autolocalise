@@ -18,20 +18,10 @@ You don't need to prepare any translation files, just provide your API key and t
 
 ## Installation
 
-### React Native
-
 ```bash
-npm install react-autolocalise @react-native-async-storage/async-storage
+npm install react-native-autolocalise @react-native-async-storage/async-storage
 # or
-yarn add react-autolocalise @react-native-async-storage/async-storage
-```
-
-### Expo
-
-```bash
-npm install react-autolocalise expo-secure-store
-# or
-yarn add react-autolocalise expo-secure-store
+yarn add react-native-autolocalise @react-native-async-storage/async-storage
 ```
 
 ## Usage
@@ -39,7 +29,7 @@ yarn add react-autolocalise expo-secure-store
 ### 1. Initialize the SDK
 
 ```typescript
-import { TranslationProvider } from "react-autolocalise";
+import { TranslationProvider } from "react-native-autolocalise";
 
 const App = () => {
   const config = {
@@ -62,7 +52,7 @@ const App = () => {
 Basic usage:
 
 ```typescript
-import { useAutoTranslate } from "react-autolocalise";
+import { useAutoTranslate } from "react-native-autolocalise";
 
 const MyComponent = () => {
   const { t, loading, error } = useAutoTranslate();
@@ -79,7 +69,7 @@ const MyComponent = () => {
 Use with params:
 
 ```typescript
-import { useAutoTranslate } from "react-autolocalise";
+import { useAutoTranslate } from "react-native-autolocalise";
 
 const MyComponent = () => {
   const { t } = useAutoTranslate();
@@ -172,7 +162,7 @@ Note: When running Expo in a web browser, it will use the browser's locale setti
 Returns an object with:
 
 - `t`: Translation function
-- `loading`: Boolean indicating initialization of translations
+- `loading`: Boolean indicating initialization of static translations
 - `error`: Error object if translation loading failed
 
 ### Static persist
@@ -180,7 +170,7 @@ Returns an object with:
 When you pass the 'static' parameter to the translation function, the translation will be persisted so that you can review and edit in the dashboard, default is non-static, nothing will be persisted.
 
 ```typescript
-import { useAutoTranslate } from "react-autolocalise";
+import { useAutoTranslate } from "react-native-autolocalise";
 const MyComponent = () => {
   const { t } = useAutoTranslate();
   return (
