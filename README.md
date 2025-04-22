@@ -2,29 +2,21 @@
 
 This is SDK for [AutoLocalise](<[AutoLocalise](https://www.autolocalise.com)>).
 
-A lightweight, efficient auto-translation SDK for React, React Native, and Expo applications. This SDK provides seamless integration for automatic content translation and support offline mode.
+A lightweight, efficient auto-translation SDK for React Native and Expo applications. This SDK provides seamless integration for automatic content translation with support for offline mode.
 
 You don't need to prepare any translation files, just provide your API key and the SDK will handle the rest.
 
 ## Features
 
-- 🌐 Cross-platform support (React Web, React Native, Expo)
+- 🌐 React Native and Expo support
 - 🚀 Automatic string detection and translation
 - 🎯 Dynamic parameter interpolation
 - 🔍 Static translation tracking
 - 🔌 Offline mode support
 - ⚙️ Configurable cache TTL
-- ⚡️ Tree-shakeable and side-effect free
+- ⚡️ Lightweight and efficient
 
 ## Installation
-
-### React Web
-
-```bash
-npm install react-autolocalise
-# or
-yarn add react-autolocalise
-```
 
 ### React Native
 
@@ -113,21 +105,6 @@ The locale format follows the ISO 639-1 language code standard, optionally combi
 - Language-Region: 'en-US', 'fr-FR', 'zh-CN', 'pt-BR', etc.
 
 ## How to get the locale
-
-### React
-
-In React web applications, you can get the user's preferred locale from the browser:
-
-```typescript
-// Get the primary locale
-const browserLocale = navigator.language; // e.g., 'en-US'
-
-// Get all preferred locales
-const preferredLocales = navigator.languages; // e.g., ['en-US', 'en']
-
-// Extract just the language code if needed
-const languageCode = browserLocale.split("-")[0]; // e.g., 'en'
-```
 
 ### React Native
 
