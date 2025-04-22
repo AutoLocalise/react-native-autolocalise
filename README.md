@@ -1,6 +1,6 @@
-# React AutoLocalise
+# React Native/Expo Auto Localization SDK
 
-This is SDK for [AutoLocalise](<[AutoLocalise](https://www.autolocalise.com)>).
+This is SDK for [AutoLocalise](https://www.autolocalise.com).
 
 A lightweight, efficient auto-translation SDK for React Native and Expo applications. This SDK provides seamless integration for automatic content translation with support for offline mode.
 

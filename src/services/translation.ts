@@ -14,7 +14,7 @@ export class TranslationService {
   private pendingTranslations: Map<string, string | undefined> = new Map();
   private batchTimeout: ReturnType<typeof setTimeout> | null = null;
   private cacheKey = "";
-  private baseUrl = process.env.BASE_URL;
+  private baseUrl = "https://autolocalise-main-53fde32.zuplo.app";
   public isInitialized = false;
 
   public isTranslationPending(text: string): boolean {
