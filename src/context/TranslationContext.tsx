@@ -39,7 +39,9 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
   useEffect(() => {
     const initializeTranslations = async () => {
       try {
-        await service.init();
+        if (config.sourceLocale !== config.targetLocale) {
+          await service.init();
+        }
         setLoading(false);
       } catch (err) {
         setError(
