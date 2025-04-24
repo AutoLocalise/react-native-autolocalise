@@ -3,6 +3,8 @@ name: Publish
 on:
   release:
     types: [published]
+    branches:
+      - main
   workflow_dispatch:
   
 

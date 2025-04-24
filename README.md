@@ -1,4 +1,4 @@
-# React Native/Expo Auto Localization SDK
+# AutoLocalise React Native/Expo SDK
 
 This is SDK for [AutoLocalise](https://www.autolocalise.com).
 
@@ -119,21 +119,13 @@ const deviceLanguage =
 ### Expo
 
 In Expo, you can use the Localization API from expo-localization:
+Refer: https://docs.expo.dev/versions/latest/sdk/localization/
 
 ```typescript
 import * as Localization from "expo-localization";
 
 // Get the device locale
-const locale = Localization.locale; // e.g., 'en-US'
-
-// Get just the language code
-const languageCode = locale.split("-")[0]; // e.g., 'en'
-
-// Get the user's preferred locales
-const preferredLocales = Localization.locales; // e.g., ['en-US', 'en']
-
-// Check if the device uses RTL layout
-const isRTL = Localization.isRTL;
+const locale =   const locale = Localization.getLocales()[0]?.languageCode;
 ```
 
 Note: When running Expo in a web browser, it will use the browser's locale settings (navigator.language) automatically.
@@ -167,7 +159,7 @@ Returns an object with:
 
 ### Static persist
 
-When you pass the 'static' parameter to the translation function, the translation will be persisted so that you can review and edit in the dashboard, default is non-static, nothing will be persisted.
+When you pass the 'static' parameter to the translation function, the translation will be persisted so that you can review and edit in the [dashboard](https://dashboard.autolocalise.com), default is non-static, nothing will be persisted.
 
 ```typescript
 import { useAutoTranslate } from "react-native-autolocalise";
