@@ -11,7 +11,7 @@ export class TranslationService {
   private config: TranslationConfig;
   private cache: TranslationMap = {};
   private storage: StorageAdapter | null = null;
-  private pendingTranslations: Map<string, string | undefined> = new Map();
+  private pendingTranslations: Map<string, boolean> = new Map();
   private batchTimeout: ReturnType<typeof setTimeout> | null = null;
   private cacheKey = "";
   private baseUrl = "https://autolocalise-main-53fde32.zuplo.app";
@@ -75,14 +75,20 @@ export class TranslationService {
     }
 
     this.batchTimeout = setTimeout(async () => {
-      const allTexts: { hashkey: string; text: string; type?: string }[] = [];
+      const allTexts: {
+        hashkey: string;
+        text: string;
+        persist: boolean;
+      }[] = [];
 
-      this.pendingTranslations.forEach((type, text) => {
-        allTexts.push({ hashkey: this.generateHash(text), text, type });
+      this.pendingTranslations.forEach((persist, text) => {
+        allTexts.push({ hashkey: this.generateHash(text), text, persist });
       });
+      console.log("allTexts", allTexts);
       this.pendingTranslations.clear();
 
       if (allTexts.length > 0) {
+        // Modify API request to include context
         const request: TranslationRequest = {
           texts: allTexts,
           sourceLocale: this.config.sourceLocale,
@@ -159,7 +165,11 @@ export class TranslationService {
     }
   }
 
-  public translate(text: string, type?: string): string {
+  public translate(
+    text: string,
+    persist: boolean = true,
+    reference?: string
+  ): string {
     if (!text || !this.isInitialized) return text;
 
     // Check cache first
@@ -168,7 +178,7 @@ export class TranslationService {
       return cachedTranslation;
     }
 
-    this.pendingTranslations.set(text, type);
+    this.pendingTranslations.set(text, persist);
     this.scheduleBatchTranslation();
 
     // Return original text while translation is pending

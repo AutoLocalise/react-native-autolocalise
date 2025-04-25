@@ -11,7 +11,7 @@ You don't need to prepare any translation files, just provide your API key and t
 - 🌐 React Native and Expo support
 - 🚀 Automatic string detection and translation
 - 🎯 Dynamic parameter interpolation
-- 🔍 Static translation tracking
+- 🔍 Persist translation tracking
 - 🔌 Offline mode support
 - ⚙️ Configurable cache TTL
 - ⚡️ Lightweight and efficient
@@ -59,7 +59,7 @@ const MyComponent = () => {
 
   return (
     <div>
-      <h1>{t("Welcome to our app!", "static")}</h1>
+      <h1>{t("Welcome to our app!", false)}</h1>
       <p>{t("This text will be automatically translated")}</p>
     </div>
   );
@@ -157,9 +157,9 @@ Returns an object with:
 - `loading`: Boolean indicating initialization of static translations
 - `error`: Error object if translation loading failed
 
-### Static persist
+### Persist for Editing
 
-When you pass the 'static' parameter to the translation function, the translation will be persisted so that you can review and edit in the [dashboard](https://dashboard.autolocalise.com), default is non-static, nothing will be persisted.
+The 'persist' means the string will be persisted so that you can review and edit in the [dashboard](https://dashboard.autolocalise.com), default is true, if the content is dynamic or you don't want to see in the dashboard, pass 'false'.
 
 ```typescript
 import { useAutoTranslate } from "react-native-autolocalise";
@@ -167,7 +167,7 @@ const MyComponent = () => {
   const { t } = useAutoTranslate();
   return (
     <div>
-      <h1>{t("Welcome to our app!", "static")}</h1>
+      <h1>{t("Welcome to our app!", false)}</h1>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "react-native-autolocalise",
-  "version": "0.0.2-alpha.2",
+  "version": "0.0.3-alpha.1",
   "description": "Auto-translation SDK for React Native and Expo applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -57,5 +57,6 @@
   },
   "bugs": {
     "url": "https://github.com/AutoLocalise/react-native-autolocalise/issues"
-  }
+  },
+  "homepage": "https://www.autolocalise.com"
 }

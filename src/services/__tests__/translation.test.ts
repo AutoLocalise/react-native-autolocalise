@@ -163,7 +163,7 @@ describe("TranslationService", () => {
       });
 
       await translationService.init();
-      const result = translationService.translate(testText, "button");
+      const result = translationService.translate(testText);
 
       expect(result).toBe(mockTranslation);
     });
@@ -199,11 +199,11 @@ describe("TranslationService", () => {
       // Clear the cache to ensure we get the original text initially
       translationService["cache"][mockConfig.targetLocale] = {};
 
-      const result = translationService.translate(testText, "button");
+      const result = translationService.translate(testText);
       expect(result).toBe(testText); // Initially returns original text
 
       // Manually add the text to pending translations as the service would
-      translationService["pendingTranslations"].set(testText, "button");
+      translationService["pendingTranslations"].set(testText, true);
 
       // Trigger the batch translation
       jest.runAllTimers();
