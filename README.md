@@ -9,7 +9,7 @@ You don't need to prepare any translation files, just provide your API key and t
 ## Features
 
 - 🌐 React Native and Expo support
-- 🚀 Automatic string detection and translation
+- 🚀 Automatic string translation
 - 🎯 Dynamic parameter interpolation
 - 🔍 Persist translation tracking
 - 🔌 Offline mode support
@@ -125,7 +125,7 @@ Refer: https://docs.expo.dev/versions/latest/sdk/localization/
 import * as Localization from "expo-localization";
 
 // Get the device locale
-const locale =   const locale = Localization.getLocales()[0]?.languageCode;
+const locale = Localization.getLocales()[0]?.languageCode;
 ```
 
 Note: When running Expo in a web browser, it will use the browser's locale settings (navigator.language) automatically.
