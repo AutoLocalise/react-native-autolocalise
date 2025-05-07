@@ -84,7 +84,6 @@ export class TranslationService {
       this.pendingTranslations.forEach((persist, text) => {
         allTexts.push({ hashkey: this.generateHash(text), text, persist });
       });
-      console.log("allTexts", allTexts);
       this.pendingTranslations.clear();
 
       if (allTexts.length > 0) {
@@ -168,6 +167,7 @@ export class TranslationService {
   public translate(
     text: string,
     persist: boolean = true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     reference?: string
   ): string {
     if (!text || !this.isInitialized) return text;
