@@ -53,20 +53,17 @@ const App = () => {
 **Basic usage:**
 
 ```typescript
+import { View, Text } from "react-native";
 import { useAutoTranslate } from "react-native-autolocalise";
 
 const MyComponent = () => {
   const { t, loading, error } = useAutoTranslate();
 
   return (
-    <div>
-      <h1>{t("Welcome to our app!", false)}</h1>
-      <p>{t("This text will be automatically translated")}</p>
-      <p style={{ color: "black" }}>
-        welcome
-        <p style={{ color: "read" }}> to </p>our app
-      </p>
-    </div>
+    <View>
+      <Text>{t("Welcome to our app!", false)}</Text>
+      <Text>{t("This text will be automatically translated")}</Text>
+    </View>
   );
 };
 ```
@@ -74,18 +71,25 @@ const MyComponent = () => {
 **Use with nested text formatting:**
 
 ```typescript
+import { Text, View } from "react-native";
 import { useAutoTranslate, FormattedText } from "react-native-autolocalise";
 
 const MyComponent = () => {
   const { t } = useAutoTranslate();
 
   return (
-    <FormattedText>
-      <Text>
-        Hello, we <Text style={{ color: "red" }}>want</Text> you to be{" "}
-        <Text style={{ fontWeight: "bold" }}>happy</Text>!
-      </Text>
-    </FormattedText>
+    <View>
+      <FormattedText>
+        <Text>
+          Hello, we <Text style={{ color: "red" }}>want</Text> you to be{" "}
+          <Text style={{ fontWeight: "bold" }}>happy</Text>!
+        </Text>
+      </FormattedText>
+      <FormattedText persist={false}>
+        Hello,
+        <Text style={{ color: "red" }}>World</Text>
+      </FormattedText>
+    </View>
   );
 };
 ```
@@ -93,6 +97,7 @@ const MyComponent = () => {
 **Use with params:**
 
 ```typescript
+import { View, Text } from "react-native";
 import { useAutoTranslate } from "react-native-autolocalise";
 
 const MyComponent = () => {
@@ -100,13 +105,13 @@ const MyComponent = () => {
   const name = "John";
 
   return (
-    <div>
-      <p>
+    <View>
+      <Text>
         {t("Welcome, {{1}}!, Nice to meet you. {{2}}.")
           .replace("{{1}}", name)
           .replace("{{2}}", t("Have a great day!"))}
-      </p>
-    </div>
+      </Text>
+    </View>
   );
 };
 ```

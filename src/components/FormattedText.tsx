@@ -17,11 +17,17 @@ import { useAutoTranslate } from "../context/TranslationContext";
 interface FormattedTextProps {
   children: React.ReactNode;
   style?: TextStyle;
+  /**
+   * Whether to persist the text for review in the dashboard.
+   * @default true
+   */
+  persist?: boolean;
 }
 
 export const FormattedText: React.FC<FormattedTextProps> = ({
   children,
   style,
+  persist = true,
 }) => {
   const { t } = useAutoTranslate();
 
@@ -88,7 +94,7 @@ export const FormattedText: React.FC<FormattedTextProps> = ({
   };
 
   const { text, styles } = extractTextAndStyles(children);
-  const translatedText = t(text);
+  const translatedText = t(text, persist);
 
   return <Text style={style}>{restoreStyledText(translatedText, styles)}</Text>;
 };
