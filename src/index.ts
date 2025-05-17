@@ -13,5 +13,6 @@ const autoTranslate = {
     return service.init();
   },
 };
+export { FormattedText } from "./components/FormattedText";
 
 export default autoTranslate;

@@ -13,6 +13,7 @@ You don't need to prepare any translation files, just provide your API key and t
 - 🎯 Dynamic parameter interpolation
 - 🔍 Persist translation tracking
 - 🔌 Offline mode support
+- 🎨 Nested text formatting support
 - ⚙️ Configurable cache TTL
 - ⚡️ Lightweight and efficient
 
@@ -49,7 +50,7 @@ const App = () => {
 
 ### 2. Use the Translation Hook
 
-Basic usage:
+**Basic usage:**
 
 ```typescript
 import { useAutoTranslate } from "react-native-autolocalise";
@@ -61,12 +62,35 @@ const MyComponent = () => {
     <div>
       <h1>{t("Welcome to our app!", false)}</h1>
       <p>{t("This text will be automatically translated")}</p>
+      <p style={{ color: "black" }}>
+        welcome
+        <p style={{ color: "read" }}> to </p>our app
+      </p>
     </div>
   );
 };
 ```
 
-Use with params:
+**Use with nested text formatting:**
+
+```typescript
+import { useAutoTranslate, FormattedText } from "react-native-autolocalise";
+
+const MyComponent = () => {
+  const { t } = useAutoTranslate();
+
+  return (
+    <FormattedText>
+      <Text>
+        Hello, we <Text style={{ color: "red" }}>want</Text> you to be{" "}
+        <Text style={{ fontWeight: "bold" }}>happy</Text>!
+      </Text>
+    </FormattedText>
+  );
+};
+```
+
+**Use with params:**
 
 ```typescript
 import { useAutoTranslate } from "react-native-autolocalise";
