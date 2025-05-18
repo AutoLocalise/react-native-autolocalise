@@ -72,11 +72,9 @@ const MyComponent = () => {
 
 ```typescript
 import { Text, View } from "react-native";
-import { useAutoTranslate, FormattedText } from "react-native-autolocalise";
+import { FormattedText } from "react-native-autolocalise";
 
 const MyComponent = () => {
-  const { t } = useAutoTranslate();
-
   return (
     <View>
       <FormattedText>
