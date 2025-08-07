@@ -6,6 +6,7 @@ import {
   TranslationResponse,
 } from "../types";
 import { getStorageAdapter } from "../storage";
+import { VERSION } from "../version";
 
 export class TranslationService {
   private config: TranslationConfig;
@@ -87,12 +88,13 @@ export class TranslationService {
       this.pendingTranslations.clear();
 
       if (allTexts.length > 0) {
-        // Modify API request to include context
+        // Modify API request to include context and version
         const request: TranslationRequest = {
           texts: allTexts,
           sourceLocale: this.config.sourceLocale,
           targetLocale: this.config.targetLocale,
           apiKey: this.config.apiKey,
+          version: `react-native-v${VERSION}`,
         };
 
         try {
