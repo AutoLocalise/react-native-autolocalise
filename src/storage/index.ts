@@ -1,10 +1,4 @@
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-
-interface StorageAdapter {
-  getItem: (key: string) => Promise<string | null>;
-  setItem: (key: string, value: string) => Promise<void>;
-  removeItem: (key: string) => Promise<void>;
-}
+import { StorageAdapter } from "../types";
 
 export async function getStorageAdapter(): Promise<StorageAdapter> {
   try {
@@ -14,6 +8,11 @@ export async function getStorageAdapter(): Promise<StorageAdapter> {
     if (AsyncStorage?.default) {
       return AsyncStorage.default;
     }
+
+    // If AsyncStorage is not available, throw an error
+    throw new Error(
+      "No storage adapter available. Please install @react-native-async-storage/async-storage"
+    );
   } catch (e) {
     throw new Error(
       "No storage adapter available. Please install @react-native-async-storage/async-storage"

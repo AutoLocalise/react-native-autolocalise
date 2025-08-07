@@ -1,14 +1,13 @@
 {
   "type": "module",
   "name": "react-native-autolocalise",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Auto-translation SDK for React Native and Expo applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "prebuild": "node scripts/update-version.js",
     "build": "rollup -c",
     "test": "jest",
     "test:watch": "jest --watch",
