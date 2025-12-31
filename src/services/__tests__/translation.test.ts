@@ -28,7 +28,6 @@ describe("TranslationService", () => {
     apiKey: "test-api-key",
     targetLocale: "es",
     sourceLocale: "en",
-    cacheTTL: 24,
   };
 
   beforeEach(() => {
@@ -228,6 +227,132 @@ describe("TranslationService", () => {
       // Verify that subsequent translation requests return the cached value
       const updatedResult = translationService.translate(testText);
       expect(updatedResult).toBe("Hola");
+    });
+
+    it("should skip translation for blank text", async () => {
+      const blankTexts = ["", "   ", "\t\n", "  \t  "];
+
+      // Initialize the service
+      (mockStorageAdapter.getItem as jest.Mock).mockResolvedValueOnce(null);
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        statusText: "OK",
+        json: () => Promise.resolve({}),
+      });
+      await translationService.init();
+
+      jest.clearAllMocks();
+
+      blankTexts.forEach((text) => {
+        const result = translationService.translate(text);
+        expect(result).toBe(text); // Should return original text
+      });
+
+      // Verify no API calls were made for blank text
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("lastRefreshTime", () => {
+    it("should include lastRefreshTime in API request when cache exists", async () => {
+      const testText = "Hello";
+      const testHash = translationService["generateHash"](testText);
+      const lastRefreshTime = Date.now() - 25 * 60 * 60 * 1000; // 25 hours ago (older than CACHE_REFRESH_TTL_MS)
+
+      const mockCachedData = {
+        timestamp: Date.now(),
+        lastRefreshTime: lastRefreshTime,
+        data: { [testHash]: "Hola" },
+      };
+
+      // Mock storage with cached data that includes lastRefreshTime
+      (mockStorageAdapter.getItem as jest.Mock).mockResolvedValueOnce(
+        JSON.stringify(mockCachedData)
+      );
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        statusText: "OK",
+        json: () => Promise.resolve({}),
+      });
+
+      await translationService.init();
+
+      // Verify that lastRefreshTime was included in the request
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${mockBaseUrl}/v1/translations`,
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            apiKey: mockConfig.apiKey,
+            targetLocale: mockConfig.targetLocale,
+            lastRefreshTime: lastRefreshTime,
+          }),
+        })
+      );
+    });
+
+    it("should send null lastRefreshTime on first initialization", async () => {
+      // Mock no cached data
+      (mockStorageAdapter.getItem as jest.Mock).mockResolvedValueOnce(null);
+
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        statusText: "OK",
+        json: () => Promise.resolve({}),
+      });
+
+      await translationService.init();
+
+      // Verify that lastRefreshTime was null in the request
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${mockBaseUrl}/v1/translations`,
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            apiKey: mockConfig.apiKey,
+            targetLocale: mockConfig.targetLocale,
+            lastRefreshTime: null,
+          }),
+        })
+      );
+    });
+
+    it("should merge new translations with existing cache", async () => {
+      const existingHash = "hash1";
+      const newHash = "hash2";
+
+      const mockCachedData = {
+        timestamp: Date.now(),
+        lastRefreshTime: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
+        data: { [existingHash]: "Existing translation" },
+      };
+
+      // Mock storage with existing cache
+      (mockStorageAdapter.getItem as jest.Mock).mockResolvedValueOnce(
+        JSON.stringify(mockCachedData)
+      );
+
+      // Mock API to return only new translations
+      const newTranslations = { [newHash]: "New translation" };
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        statusText: "OK",
+        json: () => Promise.resolve(newTranslations),
+      });
+
+      await translationService.init();
+
+      // Verify that cache contains both old and new translations
+      const cache = translationService["cache"][mockConfig.targetLocale];
+      expect(cache[existingHash]).toBe("Existing translation");
+      expect(cache[newHash]).toBe("New translation");
     });
   });
 });

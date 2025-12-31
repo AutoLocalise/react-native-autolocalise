@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { TranslationConfig, TranslationContextType } from "../types";
 import { TranslationService } from "../services/translation";
+import { validateConfig } from "../utils/validation";
 
 const TranslationContext = createContext<TranslationContextType>({
   /**
@@ -32,6 +33,11 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
   config,
   children,
 }) => {
+  // Validate configuration on mount
+  useEffect(() => {
+    validateConfig(config);
+  }, [config]);
+
   const [service] = useState(() => new TranslationService(config));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -61,7 +67,7 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
       // Increment version to trigger re-render when translations update
       setVersion((v) => v + 1);
     });
-  }, [service]);
+  }, [service, config.sourceLocale, config.targetLocale]);
 
   const translate = useMemo(
     () =>

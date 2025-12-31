@@ -2,13 +2,18 @@ export interface TranslationConfig {
   apiKey: string;
   sourceLocale: string;
   targetLocale: string;
-  cacheTTL?: number; // Time in hours for cache validity
 }
 
 export interface TranslationMap {
   [locale: string]: {
     [key: string]: string;
   };
+}
+
+export interface TranslationCacheData {
+  timestamp: number;
+  lastRefreshTime: number | null;
+  data: TranslationMap[string];
 }
 
 export interface TranslationRequest {
@@ -22,6 +27,7 @@ export interface TranslationRequest {
   targetLocale: string;
   apiKey: string;
   version: string;
+  lastRefreshTime?: number | null; // Timestamp of last cache refresh (milliseconds)
 }
 
 export interface TranslationResponse {

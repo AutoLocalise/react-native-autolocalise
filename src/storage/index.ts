@@ -13,7 +13,7 @@ export async function getStorageAdapter(): Promise<StorageAdapter> {
     throw new Error(
       "No storage adapter available. Please install @react-native-async-storage/async-storage"
     );
-  } catch (e) {
+  } catch {
     throw new Error(
       "No storage adapter available. Please install @react-native-async-storage/async-storage"
     );
