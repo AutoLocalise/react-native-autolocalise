@@ -175,12 +175,7 @@ export class TranslationService {
     }
   }
 
-  public translate(
-    text: string,
-    persist: boolean = true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    reference?: string
-  ): string {
+  public translate(text: string, persist: boolean = true): string {
     if (!text || !this.isInitialized) return text;
 
     // Skip translation for blank text (empty or whitespace only)
