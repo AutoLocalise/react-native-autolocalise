@@ -7,18 +7,17 @@ import React, {
 } from "react";
 import { TranslationConfig, TranslationContextType } from "../types";
 import { TranslationService } from "../services/translation";
+import { validateConfig } from "../utils/validation";
 
 const TranslationContext = createContext<TranslationContextType>({
   /**
    * Translates the given text to the target language
    * @param text - The text to translate
    * @param persist - Optional parameter to specify whether to store the translation in the database (default: true)
-   * @param reference - Optional context providing additional information about the translation string
    * @returns The translated text, or the original text if translation is not yet available
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  translate: (text: string, persist: boolean = true, reference?: string) =>
-    text,
+  translate: (text: string, _persist: boolean = true) => text,
   loading: true,
   error: null,
 });
@@ -32,6 +31,11 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
   config,
   children,
 }) => {
+  // Validate configuration on mount
+  useEffect(() => {
+    validateConfig(config);
+  }, [config]);
+
   const [service] = useState(() => new TranslationService(config));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -61,11 +65,11 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
       // Increment version to trigger re-render when translations update
       setVersion((v) => v + 1);
     });
-  }, [service]);
+  }, [service, config.sourceLocale, config.targetLocale]);
 
   const translate = useMemo(
     () =>
-      (text: string, persist: boolean = true, reference?: string): string => {
+      (text: string, persist: boolean = true): string => {
         if (!text || loading) return text;
 
         // Skip translation if source and target languages are the same
@@ -79,7 +83,7 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
 
         // Start async translation if not already pending
         if (!service.isTranslationPending(text)) {
-          return service.translate(text, persist, reference);
+          return service.translate(text, persist);
         }
 
         // Return original text while translation is pending
@@ -104,8 +108,8 @@ export const useAutoTranslate = () => {
     );
   }
   return {
-    t: (text: string, persist: boolean = true, reference?: string) =>
-      context.translate(text, persist, reference),
+    t: (text: string, persist: boolean = true) =>
+      context.translate(text, persist),
     loading: context.loading,
     error: context.error,
   };

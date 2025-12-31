@@ -4,8 +4,11 @@ import {
   TranslationMap,
   TranslationRequest,
   TranslationResponse,
+  TranslationCacheData,
 } from "../types";
 import { getStorageAdapter } from "../storage";
+import { VERSION } from "../version";
+import { API_BASE_URL, CLIENT_BATCH_DEBOUNCE_MS } from "../constants";
 
 export class TranslationService {
   private config: TranslationConfig;
@@ -14,7 +17,7 @@ export class TranslationService {
   private pendingTranslations: Map<string, boolean> = new Map();
   private batchTimeout: ReturnType<typeof setTimeout> | null = null;
   private cacheKey = "";
-  private baseUrl = "https://autolocalise-main-53fde32.zuplo.app";
+  private lastRefreshTime: number | null = null;
   public isInitialized = false;
 
   public isTranslationPending(text: string): boolean {
@@ -25,15 +28,12 @@ export class TranslationService {
     | ((translations: { [key: string]: string }) => void)
     | null = null;
   constructor(config: TranslationConfig) {
-    this.config = {
-      ...config,
-      cacheTTL: config.cacheTTL || 24, // Default 24 hours
-    };
+    this.config = config;
     this.cacheKey = `autolocalise_${this.config.targetLocale}`;
   }
 
   public generateHash(text: string): string {
-    // Simple hash function for demo purposes
+    // TODO: Use SHA-256 or cryptographic hash
     let hash = 0;
     for (let i = 0; i < text.length; i++) {
       const char = text.charCodeAt(i);
@@ -43,8 +43,6 @@ export class TranslationService {
     return hash.toString();
   }
 
-  private debounceTime = 1000; // 1 second debounce
-
   public getCachedTranslation(text: string): string | null {
     const hashkey = this.generateHash(text);
     return this.cache[this.config.targetLocale]?.[hashkey] || null;
@@ -53,7 +51,7 @@ export class TranslationService {
   private async baseApi<
     T extends TranslationRequest | { apiKey: string; targetLocale: string }
   >(endpoint: string, requestBody: T): Promise<TranslationResponse> {
-    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -87,12 +85,13 @@ export class TranslationService {
       this.pendingTranslations.clear();
 
       if (allTexts.length > 0) {
-        // Modify API request to include context
+        // Modify API request to include context and version
         const request: TranslationRequest = {
           texts: allTexts,
           sourceLocale: this.config.sourceLocale,
           targetLocale: this.config.targetLocale,
           apiKey: this.config.apiKey,
+          version: `rn-v${VERSION}`,
         };
 
         try {
@@ -123,7 +122,7 @@ export class TranslationService {
           throw error;
         }
       }
-    }, 100);
+    }, CLIENT_BATCH_DEBOUNCE_MS);
   }
 
   public async init(): Promise<void> {
@@ -131,32 +130,44 @@ export class TranslationService {
     try {
       this.storage = await getStorageAdapter();
       const cachedData = await this.storage.getItem(this.cacheKey);
-      if (cachedData) {
-        const { timestamp, data } = JSON.parse(cachedData);
-        const age = (Date.now() - timestamp) / (1000 * 60 * 60);
 
-        if (age < this.config.cacheTTL!) {
-          this.cache[this.config.targetLocale] = data;
-          this.isInitialized = true;
-          return;
-        }
+      if (cachedData) {
+        const parsedCache: TranslationCacheData = JSON.parse(cachedData);
+        const { lastRefreshTime, data } = parsedCache;
+
+        // Initialize cache with stored data
+        this.cache[this.config.targetLocale] = data;
+        this.lastRefreshTime = lastRefreshTime;
       }
 
+      // Fetch fresh translations from API
       const requestBody = {
         apiKey: this.config.apiKey,
         targetLocale: this.config.targetLocale,
+        lastRefreshTime: this.lastRefreshTime,
       };
 
       const data = await this.baseApi("v1/translations", requestBody);
-      this.cache[this.config.targetLocale] = data;
 
+      // Merge new translations with existing cache
+      this.cache[this.config.targetLocale] = {
+        ...this.cache[this.config.targetLocale],
+        ...data,
+      };
+
+      // Update lastRefreshTime to current time
+      this.lastRefreshTime = Date.now();
+
+      // Store updated cache
       await this.storage.setItem(
         this.cacheKey,
         JSON.stringify({
           timestamp: Date.now(),
-          data,
+          lastRefreshTime: this.lastRefreshTime,
+          data: this.cache[this.config.targetLocale],
         })
       );
+
       this.isInitialized = true;
     } catch (error) {
       console.error("Translation initialization error:", error);
@@ -164,13 +175,14 @@ export class TranslationService {
     }
   }
 
-  public translate(
-    text: string,
-    persist: boolean = true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    reference?: string
-  ): string {
+  public translate(text: string, persist: boolean = true): string {
     if (!text || !this.isInitialized) return text;
+
+    // Skip translation for blank text (empty or whitespace only)
+    const trimmedText = text.trim();
+    if (trimmedText.length === 0) {
+      return text;
+    }
 
     // Check cache first
     const cachedTranslation = this.getCachedTranslation(text);

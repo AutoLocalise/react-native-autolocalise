@@ -8,22 +8,37 @@ You don't need to prepare any translation files, just provide your API key and t
 
 ## Features
 
-- 🌐 React Native and Expo support
-- 🚀 Automatic string translation
-- 🎯 Dynamic parameter interpolation
-- 🔍 Persist translation tracking
-- 🔌 Offline mode support
-- 🎨 Nested text formatting support
-- ⚙️ Configurable cache TTL
-- ⚡️ Lightweight and efficient
+- React Native, Expo, and Expo Web support
+- Automatic string translation
+- Dynamic parameter interpolation
+- Persist translation tracking
+- Offline mode support
+- Nested text formatting support
+- Lightweight and efficient
+- Automatic storage adapter (AsyncStorage for native, localStorage for web)
 
 ## Installation
+
+### For React Native / Expo (Native)
 
 ```bash
 npm install react-native-autolocalise @react-native-async-storage/async-storage
 # or
 yarn add react-native-autolocalise @react-native-async-storage/async-storage
 ```
+
+### For Expo Web
+
+```bash
+npm install react-native-autolocalise
+# or
+yarn add react-native-autolocalise
+```
+
+**Note:** The SDK automatically detects the environment and uses the appropriate storage:
+
+- Native platforms (iOS/Android): Uses `@react-native-async-storage/async-storage`
+- Web platforms: Uses browser `localStorage`
 
 ## Usage
 
@@ -37,7 +52,6 @@ const App = () => {
     apiKey: "your-api-key",
     sourceLocale: "fr",
     targetLocale: "en",
-    // cacheTTL: 24, // Cache validity in hours (optional, defaults to 24)
   };
 
   return (
@@ -145,17 +159,22 @@ const deviceLanguage =
 
 ### Expo
 
-In Expo, you can use the Localization API from expo-localization:
-Refer: https://docs.expo.dev/versions/latest/sdk/localization/
+In Expo, you can use the Localization API from `expo-localization`:
+
+```bash
+npm install expo-localization
+```
 
 ```typescript
 import * as Localization from "expo-localization";
 
 // Get the device locale
 const locale = Localization.getLocales()[0]?.languageCode;
+// For more specific locale including region:
+const fullLocale = Localization.getLocales()[0]?.languageTag; // e.g., 'en-US'
 ```
 
-Note: When running Expo in a web browser, it will use the browser's locale settings (navigator.language) automatically.
+**Note:** When running Expo in a web browser, it will use the browser's locale settings automatically.
 
 ## API Reference
 
@@ -167,12 +186,11 @@ Note: When running Expo in a web browser, it will use the browser's locale setti
 
 ### TranslationConfig
 
-| Property     | Type   | Required | Description                                  |
-| ------------ | ------ | -------- | -------------------------------------------- |
-| apiKey       | string | Yes      | Your API key for the translation service     |
-| sourceLocale | string | Yes      | Source locale for translations               |
-| targetLocale | string | Yes      | Target locale for translations               |
-| cacheTTL     | number | No       | Cache validity period in hours (default: 24) |
+| Property     | Type   | Required | Description                              |
+| ------------ | ------ | -------- | ---------------------------------------- |
+| apiKey       | string | Yes      | Your API key for the translation service |
+| sourceLocale | string | Yes      | Source locale for translations           |
+| targetLocale | string | Yes      | Target locale for translations           |
 
 **Tips**: When `sourceLocale` === `targetLocale` no translation requests will be send.
 
@@ -184,9 +202,12 @@ Returns an object with:
 - `loading`: Boolean indicating initialization of static translations
 - `error`: Error object if translation loading failed
 
-### Persist for Editing
+### Persist and Reference for Editing
 
-The 'persist' means the string will be persisted so that you can review and edit in the [dashboard](https://dashboard.autolocalise.com), default is true, if the content is dynamic or you don't want to see in the dashboard, pass 'false'.
+The `persist` parameter controls whether the translation will be saved to the database for review and editing in the [dashboard](https://dashboard.autolocalise.com).
+
+- `persist: true` (default) - Translation is persisted and can be reviewed/edited in the dashboard
+- `persist: false` - Translation is not persisted (useful for dynamic content)
 
 ```typescript
 import { useAutoTranslate } from "react-native-autolocalise";
