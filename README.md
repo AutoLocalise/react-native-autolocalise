@@ -52,7 +52,6 @@ const App = () => {
     apiKey: "your-api-key",
     sourceLocale: "fr",
     targetLocale: "en",
-    // cacheTTL: 24, // Cache validity in hours (optional, defaults to 24)
   };
 
   return (
@@ -187,12 +186,11 @@ const fullLocale = Localization.getLocales()[0]?.languageTag; // e.g., 'en-US'
 
 ### TranslationConfig
 
-| Property     | Type   | Required | Description                                  |
-| ------------ | ------ | -------- | -------------------------------------------- |
-| apiKey       | string | Yes      | Your API key for the translation service     |
-| sourceLocale | string | Yes      | Source locale for translations               |
-| targetLocale | string | Yes      | Target locale for translations               |
-| cacheTTL     | number | No       | Cache validity period in hours (default: 24) |
+| Property     | Type   | Required | Description                              |
+| ------------ | ------ | -------- | ---------------------------------------- |
+| apiKey       | string | Yes      | Your API key for the translation service |
+| sourceLocale | string | Yes      | Source locale for translations           |
+| targetLocale | string | Yes      | Target locale for translations           |
 
 **Tips**: When `sourceLocale` === `targetLocale` no translation requests will be send.
 
