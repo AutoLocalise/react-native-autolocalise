@@ -26,10 +26,8 @@ const config = {
 
 function Probe() {
   const { t, loading } = useAutoTranslate();
-  return React.createElement(
-    "span",
-    { "data-testid": "probe" },
-    loading ? "loading" : t("Hello")
+  return (
+    <span data-testid="probe">{loading ? "loading" : t("Hello")}</span>
   );
 }
 
@@ -52,10 +50,9 @@ describe("useAutoTranslate", () => {
 
   it("returns translate helper inside provider", async () => {
     const { getByTestId } = render(
-      React.createElement(TranslationProvider, {
-        config,
-        children: React.createElement(Probe),
-      })
+      <TranslationProvider config={config}>
+        <Probe />
+      </TranslationProvider>
     );
 
     await waitFor(() => {
@@ -66,22 +63,19 @@ describe("useAutoTranslate", () => {
   it("re-inits when target locale changes", async () => {
     function Harness() {
       const [targetLocale, setTargetLocale] = useState("es");
-      return React.createElement(
-        React.Fragment,
-        null,
-        React.createElement(
-          "button",
-          { type: "button", onClick: () => setTargetLocale("fr") },
-          "switch"
-        ),
-        React.createElement(TranslationProvider, {
-          config: { ...config, targetLocale },
-          children: React.createElement(Probe),
-        })
+      return (
+        <>
+          <button type="button" onClick={() => setTargetLocale("fr")}>
+            switch
+          </button>
+          <TranslationProvider config={{ ...config, targetLocale }}>
+            <Probe />
+          </TranslationProvider>
+        </>
       );
     }
 
-    const { getByText } = render(React.createElement(Harness));
+    const { getByText } = render(<Harness />);
 
     await waitFor(() => {
       expect(mockStorageAdapter.getItem).toHaveBeenCalledWith(
