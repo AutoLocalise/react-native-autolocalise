@@ -6,7 +6,10 @@ module.exports = {
     "^.+\\.(ts|tsx)$": [
       "ts-jest",
       {
-        tsconfig: "tsconfig.json",
+        tsconfig: {
+          ...require("./tsconfig.json").compilerOptions,
+          jsx: "react",
+        },
       },
     ],
   },

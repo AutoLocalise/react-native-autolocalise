@@ -4,67 +4,82 @@ This is SDK for [AutoLocalise](https://www.autolocalise.com).
 
 A lightweight, efficient auto-translation SDK for React Native and Expo applications. This SDK provides seamless integration for automatic content translation with support for offline mode.
 
-You don't need to prepare any translation files, just provide your API key and the SDK will handle the rest.
+You don't need to prepare any translation files — configure authentication and the SDK handles the rest.
 
 ## Features
 
 - React Native, Expo, and Expo Web support
-- Automatic string translation
-- Dynamic parameter interpolation
-- Persist translation tracking
-- Offline mode support
-- Nested text formatting support
-- Lightweight and efficient
-- Automatic storage adapter (AsyncStorage for native, localStorage for web)
+- API key or access token authentication
+- Automatic string translation with offline caching
+- Nested text formatting and parameter interpolation
 
 ## Installation
 
-### For React Native / Expo (Native)
+### React Native / Expo (Native)
 
 ```bash
 npm install react-native-autolocalise @react-native-async-storage/async-storage
-# or
-yarn add react-native-autolocalise @react-native-async-storage/async-storage
 ```
 
-### For Expo Web
+### Expo Web
 
 ```bash
 npm install react-native-autolocalise
-# or
-yarn add react-native-autolocalise
 ```
 
-**Note:** The SDK automatically detects the environment and uses the appropriate storage:
-
-- Native platforms (iOS/Android): Uses `@react-native-async-storage/async-storage`
-- Web platforms: Uses browser `localStorage`
+The SDK uses AsyncStorage on native and `localStorage` on web automatically.
 
 ## Usage
 
 ### 1. Initialize the SDK
 
+Wrap your app with `TranslationProvider`. Use **one** auth method — not both.
+
+**Access token** (recommended for production):
+
+Your backend holds the API key and returns short-lived tokens to the app.
+
 ```typescript
 import { TranslationProvider } from "react-native-autolocalise";
 
-const App = () => {
-  const config = {
-    apiKey: "your-api-key",
-    sourceLocale: "fr",
-    targetLocale: "en",
-  };
+const config = {
+  getAccessToken: async () => {
+    const res = await fetch("https://your-api.com/autolocalise-token");
+    if (!res.ok) throw new Error("Token fetch failed");
+    return res.json(); // { accessToken, expiresAt }
+  },
+  sourceLocale: "en",
+  targetLocale: "es",
+};
 
+export default function App() {
   return (
     <TranslationProvider config={config}>
       <YourApp />
     </TranslationProvider>
   );
-};
+}
 ```
 
-### 2. Use the Translation Hook
+**API key** (development only):
 
-**Basic usage:**
+```typescript
+const config = {
+  apiKey: "your-api-key",
+  sourceLocale: "en",
+  targetLocale: "es",
+};
+
+export default function App() {
+  return (
+    <TranslationProvider config={config}>
+      <YourApp />
+    </TranslationProvider>
+  );
+}
+```
+
+### 2. Translate text
 
 ```typescript
 import { View, Text } from "react-native";
@@ -75,91 +90,69 @@ const MyComponent = () => {
 
   return (
     <View>
-      <Text>{t("Welcome to our app!", false)}</Text>
-      <Text>{t("This text will be automatically translated")}</Text>
+      <Text>{t("Welcome to our app!")}</Text>
+      <Text>{t("Dynamic content", false)}</Text>
     </View>
   );
 };
 ```
 
-**Use with nested text formatting:**
+Pass `persist: false` as the second argument to skip saving a string to the [dashboard](https://dashboard.autolocalise.com).
+
+### 3. Nested formatting
 
 ```typescript
 import { Text, View } from "react-native";
 import { FormattedText } from "react-native-autolocalise";
 
-const MyComponent = () => {
-  return (
-    <View>
-      <FormattedText>
-        <Text>
-          Hello, we <Text style={{ color: "red" }}>want</Text> you to be{" "}
-          <Text style={{ fontWeight: "bold" }}>happy</Text>!
-        </Text>
-      </FormattedText>
-      <FormattedText persist={false}>
-        Hello,
-        <Text style={{ color: "red" }}>World</Text>
-      </FormattedText>
-    </View>
-  );
-};
+const MyComponent = () => (
+  <View>
+    <FormattedText>
+      <Text>
+        Hello, we <Text style={{ color: "red" }}>want</Text> you to be{" "}
+        <Text style={{ fontWeight: "bold" }}>happy</Text>!
+      </Text>
+    </FormattedText>
+  </View>
+);
 ```
 
-**Use with params:**
+### 4. Parameters
 
 ```typescript
-import { View, Text } from "react-native";
-import { useAutoTranslate } from "react-native-autolocalise";
+const { t } = useAutoTranslate();
 
-const MyComponent = () => {
-  const { t } = useAutoTranslate();
-  const name = "John";
-
-  return (
-    <View>
-      <Text>
-        {t("Welcome, {{1}}!, Nice to meet you. {{2}}.")
-          .replace("{{1}}", name)
-          .replace("{{2}}", t("Have a great day!"))}
-      </Text>
-    </View>
-  );
-};
+t("Welcome, {{1}}!", false).replace("{{1}}", name);
 ```
+
+## API Reference
+
+### TranslationConfig
+
+| Property         | Type                                        | Required    | Description                                 |
+| ---------------- | ------------------------------------------- | ----------- | ------------------------------------------- |
+| `getAccessToken` | `() => Promise<{ accessToken, expiresAt }>` | Conditional | Fetch a short-lived token from your backend |
+| `apiKey`         | `string`                                    | Conditional | API key (development only)                  |
+| `sourceLocale`   | `string`                                    | Yes         | Source language code                        |
+| `targetLocale`   | `string`                                    | Yes         | Target language code                        |
+
+When `sourceLocale` equals `targetLocale`, no translation requests are sent.
+
+### useAutoTranslate
+
+| Property  | Type                                          | Description                                   |
+| --------- | --------------------------------------------- | --------------------------------------------- |
+| `t`       | `(text: string, persist?: boolean) => string` | Translate a string                            |
+| `loading` | `boolean`                                     | `true` while initial translations are loading |
+| `error`   | `Error \| null`                               | Initialization error, if any                  |
 
 ## Locale Format
 
-The locale format follows the ISO 639-1 language code standard, optionally combined with an ISO 3166-1 country code:
+Use ISO 639-1 language codes, optionally with a region: `en`, `fr`, `zh-CN`, `pt-BR`.
 
-- Language code only: 'en', 'fr', 'zh', 'ja', etc.
-- Language-Region: 'en-US', 'fr-FR', 'zh-CN', 'pt-BR', etc.
+### Getting the device locale
 
-## How to get the locale
-
-### React Native
-
-In React Native, you can get the device locale using the Localization API:
-
-```typescript
-import * as Localization from "react-native-localization";
-// or
-import { NativeModules, Platform } from "react-native";
-
-// Using react-native-localization
-const deviceLocale = Localization.locale; // e.g., 'en-US'
-
-// Alternative method using native modules
-const deviceLanguage =
-  Platform.OS === "ios"
-    ? NativeModules.SettingsManager.settings.AppleLocale ||
-      NativeModules.SettingsManager.settings.AppleLanguages[0]
-    : NativeModules.I18nManager.localeIdentifier;
-```
-
-### Expo
-
-In Expo, you can use the Localization API from `expo-localization`:
+**Expo:**
 
 ```bash
 npm install expo-localization
@@ -168,57 +161,18 @@ npm install expo-localization
 ```typescript
 import * as Localization from "expo-localization";
 
-// Get the device locale
-const locale = Localization.getLocales()[0]?.languageCode;
-// For more specific locale including region:
-const fullLocale = Localization.getLocales()[0]?.languageTag; // e.g., 'en-US'
+const locale = Localization.getLocales()[0]?.languageTag; // e.g. 'en-US'
 ```
 
-**Note:** When running Expo in a web browser, it will use the browser's locale settings automatically.
-
-## API Reference
-
-### TranslationProvider Props
-
-| Prop   | Type              | Description                                      |
-| ------ | ----------------- | ------------------------------------------------ |
-| config | TranslationConfig | Configuration object for the translation service |
-
-### TranslationConfig
-
-| Property     | Type   | Required | Description                              |
-| ------------ | ------ | -------- | ---------------------------------------- |
-| apiKey       | string | Yes      | Your API key for the translation service |
-| sourceLocale | string | Yes      | Source locale for translations           |
-| targetLocale | string | Yes      | Target locale for translations           |
-
-**Tips**: When `sourceLocale` === `targetLocale` no translation requests will be send.
-
-### useAutoTranslate Hook
-
-Returns an object with:
-
-- `t`: Translation function
-- `loading`: Boolean indicating initialization of static translations
-- `error`: Error object if translation loading failed
-
-### Persist and Reference for Editing
-
-The `persist` parameter controls whether the translation will be saved to the database for review and editing in the [dashboard](https://dashboard.autolocalise.com).
-
-- `persist: true` (default) - Translation is persisted and can be reviewed/edited in the dashboard
-- `persist: false` - Translation is not persisted (useful for dynamic content)
+**React Native:**
 
 ```typescript
-import { useAutoTranslate } from "react-native-autolocalise";
-const MyComponent = () => {
-  const { t } = useAutoTranslate();
-  return (
-    <div>
-      <h1>{t("Welcome to our app!", false)}</h1>
-    </div>
-  );
-};
+import { NativeModules, Platform } from "react-native";
+
+const locale =
+  Platform.OS === "ios"
+    ? NativeModules.SettingsManager.settings.AppleLocale
+    : NativeModules.I18nManager.localeIdentifier;
 ```
 
 ## Contributing

@@ -3,16 +3,16 @@ export {
   useAutoTranslate,
 } from "./context/TranslationContext";
 
-// Initialize function for non-React usage
-import { TranslationService } from "./services/translation";
-import { TranslationConfig } from "./types";
+export type {
+  AccessTokenResponse,
+  TranslationConfig,
+  TranslationContextType,
+} from "./types";
 
-const autoTranslate = {
-  init: (config: TranslationConfig) => {
-    const service = new TranslationService(config);
-    return service.init();
-  },
-};
+export { ConfigurationError, AccessTokenError } from "./types";
+export { TranslationService } from "./services/translation";
 export { FormattedText } from "./components/FormattedText";
+
+import autoTranslate from "./autoTranslate";
 
 export default autoTranslate;

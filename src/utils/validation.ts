@@ -1,4 +1,4 @@
-import { TranslationConfig } from "../types";
+import { ConfigurationError, TranslationConfig } from "../types";
 
 /**
  * Validate locale format (BCP 47 compliant)
@@ -30,6 +30,37 @@ export function validateLocale(locale: string): void {
 }
 
 /**
+ * Validate authentication configuration (throws on invalid config)
+ */
+export function validateAuthConfig(config: TranslationConfig): void {
+  const hasApiKey = config.apiKey !== undefined && config.apiKey !== null;
+  const hasGetAccessToken =
+    config.getAccessToken !== undefined && config.getAccessToken !== null;
+
+  if (hasApiKey && hasGetAccessToken) {
+    throw new ConfigurationError(
+      "Provide either apiKey or getAccessToken, not both"
+    );
+  }
+
+  if (!hasApiKey && !hasGetAccessToken) {
+    throw new ConfigurationError(
+      "Either apiKey or getAccessToken must be provided"
+    );
+  }
+
+  if (hasApiKey) {
+    if (typeof config.apiKey !== "string" || config.apiKey.trim().length === 0) {
+      throw new ConfigurationError("apiKey cannot be empty");
+    }
+  }
+
+  if (hasGetAccessToken && typeof config.getAccessToken !== "function") {
+    throw new ConfigurationError("getAccessToken must be a function");
+  }
+}
+
+/**
  * Validate translation configuration
  */
 export function validateConfig(config: TranslationConfig): void {
@@ -38,20 +69,45 @@ export function validateConfig(config: TranslationConfig): void {
     return;
   }
 
-  if (config.apiKey === null || config.apiKey === undefined || typeof config.apiKey !== "string") {
-    console.warn("API key must be a non-empty string");
+  const hasApiKey = config.apiKey !== undefined && config.apiKey !== null;
+  const hasGetAccessToken =
+    config.getAccessToken !== undefined && config.getAccessToken !== null;
+
+  if (hasApiKey && hasGetAccessToken) {
+    console.warn("Provide either apiKey or getAccessToken, not both");
     return;
   }
 
-  const trimmedApiKey = config.apiKey.trim();
-
-  if (trimmedApiKey.length === 0) {
-    console.warn("API key cannot be empty or whitespace only");
+  if (!hasApiKey && !hasGetAccessToken) {
+    console.warn("Either apiKey or getAccessToken must be provided");
     return;
   }
 
-  if (trimmedApiKey.length < 8) {
-    console.warn("API key appears to be invalid (too short)");
+  if (hasApiKey) {
+    if (
+      config.apiKey === null ||
+      config.apiKey === undefined ||
+      typeof config.apiKey !== "string"
+    ) {
+      console.warn("API key must be a non-empty string");
+      return;
+    }
+
+    const trimmedApiKey = config.apiKey.trim();
+
+    if (trimmedApiKey.length === 0) {
+      console.warn("API key cannot be empty or whitespace only");
+      return;
+    }
+
+    if (trimmedApiKey.length < 8) {
+      console.warn("API key appears to be invalid (too short)");
+    }
+  }
+
+  if (hasGetAccessToken && typeof config.getAccessToken !== "function") {
+    console.warn("getAccessToken must be a function");
+    return;
   }
 
   validateLocale(config.sourceLocale);
