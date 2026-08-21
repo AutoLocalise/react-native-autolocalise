@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "react-native-autolocalise",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Auto-translation SDK for React Native and Expo applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
