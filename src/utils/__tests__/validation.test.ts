@@ -1,4 +1,5 @@
-import { validateLocale, validateConfig } from "../validation";
+import { validateLocale, validateConfig, validateAuthConfig } from "../validation";
+import { ConfigurationError } from "../../types";
 
 describe("Validation Utils", () => {
   describe("validateLocale", () => {
@@ -161,6 +162,105 @@ describe("Validation Utils", () => {
         expect.stringContaining("Source locale and target locale are the same")
       );
       warnSpy.mockRestore();
+    });
+
+    it("should accept valid configuration with getAccessToken", () => {
+      const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+      validateConfig({
+        getAccessToken: async () => ({
+          accessToken: "token",
+          expiresAt: Date.now() + 3600000,
+        }),
+        sourceLocale: "en",
+        targetLocale: "es",
+      });
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+
+    it("should warn when both apiKey and getAccessToken are provided", () => {
+      const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+      validateConfig({
+        ...validConfig,
+        getAccessToken: async () => ({
+          accessToken: "token",
+          expiresAt: Date.now() + 3600000,
+        }),
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Provide either apiKey or getAccessToken, not both"
+      );
+      warnSpy.mockRestore();
+    });
+
+    it("should warn when neither auth method is provided", () => {
+      const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+      validateConfig({
+        sourceLocale: "en",
+        targetLocale: "es",
+      } as never);
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Either apiKey or getAccessToken must be provided"
+      );
+      warnSpy.mockRestore();
+    });
+  });
+
+  describe("validateAuthConfig", () => {
+    it("should throw ConfigurationError for both auth methods", () => {
+      expect(() =>
+        validateAuthConfig({
+          apiKey: "test-api-key",
+          getAccessToken: async () => ({
+            accessToken: "token",
+            expiresAt: Date.now(),
+          }),
+          sourceLocale: "en",
+          targetLocale: "es",
+        })
+      ).toThrow(ConfigurationError);
+    });
+
+    it("should throw ConfigurationError for neither auth method", () => {
+      expect(() =>
+        validateAuthConfig({
+          sourceLocale: "en",
+          targetLocale: "es",
+        } as never)
+      ).toThrow(ConfigurationError);
+    });
+
+    it("should throw ConfigurationError for empty apiKey", () => {
+      expect(() =>
+        validateAuthConfig({
+          apiKey: "  ",
+          sourceLocale: "en",
+          targetLocale: "es",
+        })
+      ).toThrow(ConfigurationError);
+    });
+
+    it("should accept valid apiKey config", () => {
+      expect(() =>
+        validateAuthConfig({
+          apiKey: "test-api-key-123456",
+          sourceLocale: "en",
+          targetLocale: "es",
+        })
+      ).not.toThrow();
+    });
+
+    it("should accept valid getAccessToken config", () => {
+      expect(() =>
+        validateAuthConfig({
+          getAccessToken: async () => ({
+            accessToken: "token",
+            expiresAt: Date.now(),
+          }),
+          sourceLocale: "en",
+          targetLocale: "es",
+        })
+      ).not.toThrow();
     });
   });
 });

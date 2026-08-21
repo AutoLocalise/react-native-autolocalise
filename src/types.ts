@@ -1,7 +1,34 @@
+export interface AccessTokenResponse {
+  accessToken: string;
+  expiresAt: number | string;
+}
+
+export class ConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ConfigurationError";
+    Object.setPrototypeOf(this, ConfigurationError.prototype);
+  }
+}
+
+export class AccessTokenError extends Error {
+  constructor(
+    message: string,
+    public originalError?: unknown
+  ) {
+    super(message);
+    this.name = "AccessTokenError";
+    Object.setPrototypeOf(this, AccessTokenError.prototype);
+  }
+}
+
 export interface TranslationConfig {
-  apiKey: string;
+  apiKey?: string;
+  getAccessToken?: () => Promise<AccessTokenResponse>;
   sourceLocale: string;
   targetLocale: string;
+  /** Override the default AutoLocalise API base URL (e.g. for staging) */
+  apiBaseUrl?: string;
 }
 
 export interface TranslationMap {
@@ -24,7 +51,8 @@ export interface TranslationRequest {
   }>;
   sourceLocale: string;
   targetLocale: string;
-  apiKey: string;
+  apiKey?: string;
+  accessToken?: string;
   version: string;
   lastRefreshTime?: number | null; // Timestamp of last cache refresh (milliseconds)
 }

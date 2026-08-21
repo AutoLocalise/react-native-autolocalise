@@ -18,3 +18,13 @@ export const CACHE_REFRESH_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
  * API base URL for the translation service
  */
 export const API_BASE_URL = "https://autolocalise-main-53fde32.zuplo.app";
+
+/**
+ * Refresh access tokens this many milliseconds before expiry
+ */
+export const TOKEN_EXPIRY_SAFETY_BUFFER_MS = 60000;
+
+/**
+ * Maximum retry attempts after token refresh on token_expired errors
+ */
+export const MAX_RETRY_ATTEMPTS = 1;
